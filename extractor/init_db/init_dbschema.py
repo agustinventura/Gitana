@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
 import sys
@@ -461,13 +463,14 @@ class InitDbSchema():
                                "own_id int(20), " \
                                "pos int(10), " \
                                "type int(20), " \
-                               "source_id int(20), " \
-                               "source_type_id int(20), " \
+                               "issue_id int(20), " \
+                               "topic_id int(20), " \
+                               "channel_id int(20), " \
                                "body longblob, " \
                                "votes int(20), " \
                                "author_id int(20), " \
                                "created_at timestamp DEFAULT '0000-00-00 00:00:00'," \
-                               "CONSTRAINT ip UNIQUE (source_id, source_type_id, own_id) " \
+                               "CONSTRAINT ip UNIQUE (issue_id, topic_id, channel_id, own_id) " \
                                ") ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;"
 
         create_table_message_dependency = "CREATE TABLE message_dependency ( " \
@@ -490,16 +493,6 @@ class InitDbSchema():
                                                                "(NULL, 'reply'), " \
                                                                "(NULL, 'file_upload');"
 
-        create_table_source_message_type = "CREATE TABLE source_message_type ( " \
-                                           "id int(20) AUTO_INCREMENT PRIMARY KEY, " \
-                                           "name varchar(255), " \
-                                           "CONSTRAINT name UNIQUE (name) " \
-                                           ") ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;"
-
-        insert_source_message_types = "INSERT INTO source_message_type VALUES (NULL, 'issue'), " \
-                                                                             "(NULL, 'topic'), " \
-                                                                             "(NULL, 'channel');"
-
         create_table_attachment = "CREATE TABLE attachment ( " \
                                   "id int(20) PRIMARY KEY, " \
                                   "own_id int(20), " \
@@ -518,8 +511,6 @@ class InitDbSchema():
         cursor.execute(create_table_message_dependency)
         cursor.execute(create_table_message_type)
         cursor.execute(insert_message_types)
-        cursor.execute(create_table_source_message_type)
-        cursor.execute(insert_source_message_types)
         cursor.execute(create_table_attachment)
 
         cursor.close()

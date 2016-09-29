@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
 import sys
@@ -184,20 +186,6 @@ class Issue2Db():
         self.cnx.commit()
         cursor.close()
 
-    def get_source_type_id(self, name):
-        found = None
-        cursor = self.cnx.cursor()
-        query = "SELECT id FROM source_message_type WHERE name = %s"
-        arguments = [name]
-        cursor.execute(query, arguments)
-        row = cursor.fetchone()
-        cursor.close()
-
-        if row:
-            found = row[0]
-
-        return found
-
     def get_message_type_id(self, name):
         found = None
         cursor = self.cnx.cursor()
@@ -212,20 +200,20 @@ class Issue2Db():
 
         return found
 
-    def insert_issue_comment(self, position, issue_id, body, author_id, created_at):
+    def insert_issue_comment(self, own_id, position, issue_id, body, author_id, created_at):
         cursor = self.cnx.cursor()
         query = "INSERT IGNORE INTO message " \
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-        arguments = [None, None, position, self.get_message_type_id("reply"),
-                     issue_id, self.get_source_type_id("issue"), body, None, author_id, created_at]
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        arguments = [None, own_id, position, self.get_message_type_id("comment"),
+                     issue_id, None, None, body, None, author_id, created_at]
         cursor.execute(query, arguments)
         self.cnx.commit()
         cursor.close()
 
-    def select_issue_comment_id(self, issue_id, created_at):
+    def select_issue_comment_id(self, own_id, issue_id, created_at):
         cursor = self.cnx.cursor()
-        query = "SELECT id FROM message WHERE source_id = %s AND source_type_id = %s AND created_at = %s"
-        arguments = [issue_id, self.get_source_type_id("issue"), created_at]
+        query = "SELECT id FROM message WHERE own_id = %s AND issue_id = %s AND created_at = %s"
+        arguments = [own_id, issue_id, created_at]
         cursor.execute(query, arguments)
         row = cursor.fetchone()
         found = None
@@ -370,15 +358,16 @@ class Issue2Db():
     def extract_comments(self, issue_id, comments):
         for comment in comments:
             try:
+                own_id = comment.get('id')
                 body = comment.get('text')
                 position = comment.get('count')
                 author_id = self.get_user_id(comment.get('author'), issue_id)
                 created_at = self.get_timestamp(comment.get('creation_time'))
-                self.insert_issue_comment(position, issue_id, body, author_id, created_at)
+                self.insert_issue_comment(own_id, position, issue_id, body, author_id, created_at)
 
                 attachment_id = comment.get('attachment_id')
                 if attachment_id:
-                    issue_comment_id = self.select_issue_comment_id(issue_id, created_at)
+                    issue_comment_id = self.select_issue_comment_id(own_id, issue_id, created_at)
                     self.extract_attachment(issue_comment_id, attachment_id)
             except:
                 self.logger.warning("Issue2Db: comment(" + str(position) + ") not extracted for issue id: " + str(issue_id) + " - tracker id " + str(self.issue_tracker_id))
