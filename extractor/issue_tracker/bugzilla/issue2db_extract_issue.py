@@ -7,8 +7,6 @@ from mysql.connector import errorcode
 from datetime import datetime
 import re
 from email.utils import parseaddr
-import getopt
-import os
 import sys
 import logging
 import logging.handlers
@@ -35,7 +33,7 @@ class Issue2Db(object):
     def __call__(self):
         LOG_FILENAME = self.log_path + "-issue2db"
         self.logger = logging.getLogger(LOG_FILENAME)
-        fileHandler = logging.FileHandler(LOG_FILENAME + "-" + self.db_name + "-" + str(self.interval[0]) + "-" + str(self.interval[-1]) + ".log", mode='w')
+        fileHandler = logging.FileHandler(LOG_FILENAME + "-" + str(self.interval[0]) + "-" + str(self.interval[-1]) + ".log", mode='w')
         formatter = logging.Formatter("%(asctime)s:%(levelname)s:%(message)s", "%Y-%m-%d %H:%M:%S")
 
         fileHandler.setFormatter(formatter)
@@ -59,7 +57,7 @@ class Issue2Db(object):
             self.cnx.commit()
             cursor.close()
         except Exception, e:
-            self.logger.warning("user (" + user_email.lower() + ") not inserted for issue id: " + str(issue_id) + " - tracker id " + str(self.issue_tracker_id))
+            self.logger.warning("user (" + user_email.lower() + ") not inserted for issue id: " + str(issue_id) + " - tracker id " + str(self.issue_tracker_id), exc_info=True)
 
     def select_user_id(self, user_email):
         cursor = self.cnx.cursor()
@@ -443,6 +441,7 @@ class Issue2Db(object):
         component = issue.component
         version = issue.version
         hardware = issue.op_sys
+
         priority = issue.priority
         severity = issue.severity
         created_at = self.get_timestamp(issue.creation_time)
@@ -500,12 +499,6 @@ class Issue2Db(object):
             except Exception, e:
                 self.logger.error("something went wrong for issue id: " + str(issue_id) + " - tracker id " + str(self.issue_tracker_id), exc_info=True)
         self.cnx.close()
-
-    def set_database(self):
-        cursor = self.cnx.cursor()
-        use_database = "USE " + self.db_name
-        cursor.execute(use_database)
-        cursor.close()
 
     def extract(self):
         try:

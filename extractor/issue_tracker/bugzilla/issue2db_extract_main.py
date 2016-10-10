@@ -21,7 +21,7 @@ class Issue2DbMain():
                  repo_name, type, url, product, before_date, recover_import, num_processes,
                  config, logger):
         self.logger = logger
-        self.log_path = self.logger.name.rsplit('.', 1)[0]
+        self.log_path = self.logger.name.rsplit('.', 1)[0] + "-" + project_name
         self.type = type
         self.url = url
         self.product = product
@@ -107,6 +107,7 @@ class Issue2DbMain():
         return '-'.join([str(e) for e in elements])
 
     def get_intervals(self, elements):
+        elements.sort()
         chunk_size = len(elements)/self.num_processes
 
         if chunk_size == 0:

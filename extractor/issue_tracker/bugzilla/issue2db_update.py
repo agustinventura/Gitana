@@ -22,7 +22,7 @@ class Issue2DbUpdate():
                  config, logger):
 
         self.logger = logger
-        self.log_path = self.logger.name.rsplit('.', 1)[0]
+        self.log_path = self.logger.name.rsplit('.', 1)[0] + "-" + project_name
         self.url = url
         self.product = product
         self.project_name = project_name
@@ -66,6 +66,7 @@ class Issue2DbUpdate():
         return found
 
     def get_intervals(self, elements):
+        elements.sort()
         chunk_size = len(elements)/self.num_processes
 
         if chunk_size == 0:

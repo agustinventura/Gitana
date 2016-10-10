@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
 import mysql.connector
@@ -8,15 +6,18 @@ import os
 import logging
 import logging.handlers
 import glob
+import uuid
 
 from extractor.db.dbschema import DbSchema
 from extractor.cvs.git.git2db_extract_main import Git2DbMain
 from extractor.cvs.git.git2db_update import Git2DbUpdate
 from extractor.issue_tracker.bugzilla.issue2db_extract_main import Issue2DbMain
 from extractor.issue_tracker.bugzilla.issue2db_update import Issue2DbUpdate
+from extractor.forum.eclipse.forum2db_extract_main import Forum2DbMain
+from extractor.forum.eclipse.forum2db_update import Forum2DbUpdate
 
 LOG_FOLDER_PATH = "logs"
-LOG_NAME = "gitana.log"
+LOG_NAME = "gitana"
 
 
 class Gitana():
@@ -32,7 +33,7 @@ class Gitana():
             self.create_log_folder(LOG_FOLDER_PATH)
             self.log_folder_path = LOG_FOLDER_PATH
 
-        self.log_path = self.log_folder_path + "/" + LOG_NAME
+        self.log_path = self.log_folder_path + "/" + LOG_NAME + "-" + str(uuid.uuid4())[:5] + ".log"
         self.logger = logging.getLogger(self.log_path)
         fileHandler = logging.FileHandler(self.log_path, mode='w')
         formatter = logging.Formatter("%(asctime)s:%(levelname)s:%(message)s", "%Y-%m-%d %H:%M:%S")
@@ -97,10 +98,19 @@ class Gitana():
                                   self.config, self.logger)
         issue2db.update()
 
-    def import_github_tracker_data(self, db_name, project_name, repo_name, github_repo_full_name, before_date, recover_import, tokens):
-        #TODO
-        print "here"
+    def import_eclipse_forum_data(self, db_name, project_name, eclipse_forum_url, before_date, recover_import, processes):
+        self.logger.info("importing eclipse forum data")
+        forum2db = Forum2DbMain(db_name, project_name,
+                                "eclipse_forum", eclipse_forum_url, before_date, recover_import, processes,
+                                self.config, self.logger)
+        forum2db.extract()
 
-    def import_eclipse_forum_data(self, project_name, eclipse_forum_url, before_date, recover_import):
+    def update_eclipse_forum_data(self, db_name, project_name, before_date, recover_import, processes):
+        self.logger.info("importing eclipse forum data")
+        forum2db = Forum2DbUpdate(db_name, project_name, before_date, recover_import, processes,
+                                  self.config, self.logger)
+        forum2db.update()
+
+    def import_github_tracker_data(self, db_name, project_name, repo_name, github_repo_full_name, before_date, recover_import, tokens):
         #TODO
         print "here"
