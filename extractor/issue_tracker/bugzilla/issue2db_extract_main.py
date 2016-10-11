@@ -2,11 +2,12 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import mysql.connector
-from mysql.connector import errorcode
-from datetime import datetime
 import multiprocessing
 import sys
+from datetime import datetime
+
+import mysql.connector
+
 sys.path.insert(0, "..//..//..")
 
 from issue2db_extract_issue import Issue2Db
@@ -17,7 +18,6 @@ from extractor.util.db_util import DbUtil
 
 
 class Issue2DbMain():
-
     NUM_PROCESSES = 10
 
     def __init__(self, db_name, project_name,

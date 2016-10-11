@@ -2,14 +2,15 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import mysql.connector
-from mysql.connector import errorcode
-from datetime import datetime
-import re
-from email.utils import parseaddr
-import sys
 import logging
 import logging.handlers
+import re
+import sys
+from datetime import datetime
+from email.utils import parseaddr
+
+import mysql.connector
+
 sys.path.insert(0, "..//..//..")
 
 from querier_bugzilla import BugzillaQuerier

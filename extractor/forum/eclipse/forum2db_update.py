@@ -2,11 +2,12 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import mysql.connector
-from mysql.connector import errorcode
-from datetime import datetime
 import multiprocessing
 import sys
+from datetime import datetime
+
+import mysql.connector
+
 sys.path.insert(0, "..//..//..")
 
 from querier_eclipse_forum import EclipseForumQuerier
@@ -16,7 +17,6 @@ from extractor.util.db_util import DbUtil
 
 
 class Forum2DbUpdate():
-
     NUM_PROCESSES = 2
 
     def __init__(self, db_name, project_name, url, num_processes,
@@ -143,7 +143,8 @@ class Forum2DbUpdate():
 
                 if topic_in_db:
                     views = self.querier.get_topic_views(topic)
-                    last_changed_at = self.date_util.get_timestamp(self.querier.get_last_changed_at(topic), "%a, %d %B %Y %H:%M")
+                    last_changed_at = self.date_util.get_timestamp(self.querier.get_last_changed_at(topic),
+                                                                   "%a, %d %B %Y %H:%M")
                     self.update_topic_info(topic_in_db, forum_id, views, last_changed_at)
 
             next_page = self.querier.go_next_page()
@@ -154,7 +155,8 @@ class Forum2DbUpdate():
         if topic_ids:
             self.update_topics_info(forum_id)
 
-            intervals = [i for i in multiprocessing_util.get_tasks_intervals(topic_ids, self.num_processes) if len(i) > 0]
+            intervals = [i for i in multiprocessing_util.get_tasks_intervals(topic_ids, self.num_processes) if
+                         len(i) > 0]
 
             queue_extractors = multiprocessing.JoinableQueue()
             results = multiprocessing.Queue()

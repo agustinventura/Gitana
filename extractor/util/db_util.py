@@ -3,10 +3,9 @@
 __author__ = 'valerio cosentino'
 
 import mysql.connector
-from mysql.connector import errorcode
+
 
 class DbUtil():
-
     def lowercase(self, str):
         if str:
             str = str.lower()
@@ -82,7 +81,7 @@ class DbUtil():
         if row:
             found = row[0]
         else:
-            logger.warning("there is not user with this email " + email )
+            logger.warning("there is not user with this email " + email)
 
         return found
 
@@ -101,7 +100,7 @@ class DbUtil():
         if row:
             found = row[0]
         else:
-            logger.warning("there is not user with this name " + name )
+            logger.warning("there is not user with this name " + name)
 
         return found
 

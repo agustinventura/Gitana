@@ -2,10 +2,12 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-from git import *
 import re
-from datetime import datetime
 import string
+from datetime import datetime
+
+from git import *
+
 from extractor.util.date_util import DateUtil
 
 
@@ -245,7 +247,9 @@ class GitQuerier():
                 found = commit.committed_date
         except:
             found = None
-            self.logger.error("something went wrong when trying to retrieve the attribute " + prop + " from the commit " + str(commit.hexsha))
+            self.logger.error(
+                "something went wrong when trying to retrieve the attribute " + prop + " from the commit " + str(
+                    commit.hexsha))
 
         return found
 

@@ -2,13 +2,14 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import mysql.connector
-from mysql.connector import errorcode
-from datetime import datetime
-import time
-import sys
 import logging
 import logging.handlers
+import sys
+import time
+from datetime import datetime
+
+import mysql.connector
+
 sys.path.insert(0, "..//..//..")
 
 from querier_eclipse_forum import EclipseForumQuerier
@@ -62,7 +63,8 @@ class Topic2Db(object):
             cursor = self.cnx.cursor()
             query = "INSERT IGNORE INTO message " \
                     "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-            arguments = [None, own_id, pos, self.db_util.get_message_type_id(self.cnx, "reply"), 0, topic_id, 0, body, None, user_id, created_at]
+            arguments = [None, own_id, pos, self.db_util.get_message_type_id(self.cnx, "reply"), 0, topic_id, 0, body,
+                         None, user_id, created_at]
             cursor.execute(query, arguments)
             self.cnx.commit()
 

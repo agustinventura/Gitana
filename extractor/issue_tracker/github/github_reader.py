@@ -6,70 +6,54 @@ import sys
 sys.path.insert(0, "..\\..")
 
 from github import Github
-import logging
-import logging.handlers
-
-USERNAME = "gabrielecirulli"
-REPO_NAME = "2048"
 
 
-class GitHubQuerier:
-
-    def __init__(self, username, repo_name, logger):
+# I'm mixing here two concepts: Data access object and iterator, should divide them
+class GithubReader:
+    def __init__(self, repo_name, logger):
         self.logger = logger
-        self.username = username
         self.repo_name = repo_name
-        self.github = None
-        self.repository = None
-
-    def load_repository(self):
-            try:
-                self.repository = self.github.get_repo(USERNAME+"/"+REPO_NAME)
-            except Exception, e:
-                self.logger.error("Error loading user " + USERNAME + " repository " + REPO_NAME + ": " + e.message)
-
-    def extract(self):
         self.github = Github()
-        self.load_repository()
-        self.load_issues()
+        self.repository = self.__load_repository()
+        self.issues = None
+        self.last_page = -1
+        self.current_page = 0
+        self.issues_initialized = False
 
-    def load_issues(self):
-        if self.repository is not None:
-            last_page = self.get_last_page()
-            page_count = 0
-            while page_count <= last_page:
-                issues = self.get_all_issues_ascending().get_page(page_count)
-                for issue in issues:
-                    print issue
-                page_count += 1
+    def __load_repository(self):
+        repository = None
+        try:
+            repository = self.github.get_repo(self.repo_name)
+        except Exception, e:
+            self.logger.error("Error loading repository " + self.repo_name + ": " + e.message)
+        return repository
+
+    def load_issues_page(self):
+        if not self.issues_initialized:
+            self.__load_issues()
+
+        if self.current_page <= self.last_page:
+            issues_page = self.issues.get_page(self.current_page)
+            self.current_page += 1
         else:
-            self.logger("Error loading issues, repository " + REPO_NAME + "does not exist")
+            issues_page = None
 
-    def get_last_page(self):
-        last_page_url = self.get_all_issues_ascending()._getLastPageUrl()
+        return issues_page
+
+    def __load_issues(self):
+        if self.repository is not None:
+            self.issues = self.__get_all_issues_ascending()
+            self.last_page = self.__get_last_page()
+            self.current_page = 0
+            self.issues_initialized = True
+        else:
+            self.logger("Error loading issues, repository " + self.repo_name + "not initialized")
+
+    def __get_last_page(self):
+        last_page_url = self.issues._getLastPageUrl()
         last_page = int(last_page_url.split("page=")[-1])
         return last_page
 
-    def get_all_issues_ascending(self):
+    def __get_all_issues_ascending(self):
         return self.repository.get_issues(state="all", direction="asc")
 
-
-def main():
-    logger = get_stdout_logger()
-    github_querier = GitHubQuerier(USERNAME, REPO_NAME, logger)
-    github_querier.extract()
-
-
-def get_stdout_logger():
-    root = logging.getLogger()
-    root.setLevel(logging.DEBUG)
-    ch = logging.StreamHandler(sys.stdout)
-    ch.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    ch.setFormatter(formatter)
-    root.addHandler(ch)
-    return root
-
-
-if __name__ == "__main__":
-    main()

@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import mysql.connector
-from mysql.connector import errorcode
-from datetime import datetime
 import multiprocessing
 import sys
-import time
+from datetime import datetime
+
+import mysql.connector
+
 sys.path.insert(0, "..//..//..")
 
 from querier_git import GitQuerier
@@ -24,7 +24,6 @@ FULL_IMPORT_TYPE = 3
 
 
 class Git2DbMain():
-
     NUM_PROCESSES = 10
 
     def __init__(self, db_name, project_name,
@@ -114,7 +113,7 @@ class Git2DbMain():
             repo_id = self.db_util.select_repo_id(self.cnx, project_id, self.repo_name, self.logger)
             self.cnx.close()
 
-            #info contribution does not need a connection to the db
+            # info contribution does not need a connection to the db
             self.get_info_contribution(repo_id)
 
             self.cnx = self.db_util.restart_connection(self.config, self.logger)

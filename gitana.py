@@ -1,24 +1,24 @@
 __author__ = 'valerio cosentino'
 
-import mysql.connector
-from mysql.connector import errorcode
-import os
+import glob
 import logging
 import logging.handlers
-import glob
+import os
 import uuid
 
-from extractor.db.dbschema import DbSchema
+import mysql.connector
+
 from extractor.cvs.git.git2db_extract_main import Git2DbMain
 from extractor.cvs.git.git2db_update import Git2DbUpdate
-from extractor.issue_tracker.bugzilla.issue2db_extract_main import Issue2DbMain
-from extractor.issue_tracker.bugzilla.issue2db_update import Issue2DbUpdate
+from extractor.db.dbschema import DbSchema
 from extractor.forum.eclipse.forum2db_extract_main import Forum2DbMain
 from extractor.forum.eclipse.forum2db_update import Forum2DbUpdate
+from extractor.issue_tracker.bugzilla.issue2db_extract_main import Issue2DbMain
+from extractor.issue_tracker.bugzilla.issue2db_update import Issue2DbUpdate
+from extractor.issue_tracker.github.github_importer import GithubImporter
 
 LOG_FOLDER_PATH = "logs"
 LOG_NAME = "gitana"
-
 
 class Gitana():
 
@@ -91,6 +91,12 @@ class Gitana():
                                 self.config, self.logger)
         issue2db.extract()
 
+    def import_github_tracker_data(self, db_name, project_name, repo_name, url, github_repo_full_name):
+        self.logger.info("importing bugzilla data")
+        github_importer = GithubImporter(db_name, project_name, repo_name, url, github_repo_full_name, self.config,
+                                         self.logger)
+        github_importer.import_issues()
+
     def update_bugzilla_tracker_data(self, db_name, project_name, repo_name, url, product, processes):
         self.logger.info("updating bugzilla data")
         issue2db = Issue2DbUpdate(db_name, project_name,
@@ -110,7 +116,3 @@ class Gitana():
         forum2db = Forum2DbUpdate(db_name, project_name, url, processes,
                                   self.config, self.logger)
         forum2db.update()
-
-    def import_github_tracker_data(self, db_name, project_name, repo_name, github_repo_full_name, before_date, recover_import, tokens):
-        #TODO
-        print "here"

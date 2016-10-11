@@ -2,11 +2,12 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import mysql.connector
-from mysql.connector import errorcode
-from datetime import datetime
 import multiprocessing
 import sys
+from datetime import datetime
+
+import mysql.connector
+
 sys.path.insert(0, "..//..//..")
 
 from querier_eclipse_forum import EclipseForumQuerier
@@ -17,7 +18,6 @@ from extractor.util.date_util import DateUtil
 
 
 class Forum2DbMain():
-
     NUM_PROCESSES = 2
 
     def __init__(self, db_name, project_name,
@@ -121,7 +121,9 @@ class Forum2DbMain():
             self.update_topic_info(topic_id, forum_id, views, last_changed_at)
         else:
             if self.before_date:
-                if self.date_util.get_timestamp(self.querier.get_topic_created_at(topic), "%a, %d %B %Y") <= self.date_util.get_timestamp(self.before_date, "%Y-%m-%d"):
+                if self.date_util.get_timestamp(self.querier.get_topic_created_at(topic),
+                                                "%a, %d %B %Y") <= self.date_util.get_timestamp(self.before_date,
+                                                                                                "%Y-%m-%d"):
                     self.insert_topic(own_id, forum_id, title, views, last_changed_at)
             else:
                 self.insert_topic(own_id, forum_id, title, views, last_changed_at)

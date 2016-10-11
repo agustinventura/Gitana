@@ -2,14 +2,15 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import time
 import os
 import sys
+import time
 
 sys.path.insert(0, "..//..//..")
 
 from selenium import webdriver
 import extractor.util as util
+
 WEB_DRIVER_PATH = os.path.dirname(util.__file__) + "\selenium_driver\phantomjs.exe"
 
 
@@ -22,7 +23,6 @@ class EclipseForumQuerier():
 
     def start_browser(self):
         if not self.driver:
-
             self.driver = webdriver.PhantomJS(executable_path=WEB_DRIVER_PATH)
             self.driver.maximize_window()
         self.driver.get(self.url)
@@ -119,7 +119,10 @@ class EclipseForumQuerier():
 
     def get_message_author_name(self, message):
         try:
-            found = message.find_element_by_class_name("MsgR2").find_element_by_class_name("msgud").find_elements_by_tag_name("a")[0].text
+            found = \
+                message.find_element_by_class_name("MsgR2").find_element_by_class_name(
+                    "msgud").find_elements_by_tag_name(
+                    "a")[0].text
         except:
             found = None
 

@@ -2,13 +2,14 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import mysql.connector
-from mysql.connector import errorcode
-import re
-from datetime import datetime
 import logging
 import logging.handlers
+import re
 import sys
+from datetime import datetime
+
+import mysql.connector
+
 sys.path.insert(0, "..//..")
 
 from querier_git import GitQuerier
