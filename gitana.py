@@ -92,7 +92,7 @@ class Gitana():
         issue2db.extract()
 
     def import_github_tracker_data(self, db_name, project_name, repo_name, url, github_repo_full_name):
-        self.logger.info("importing bugzilla data")
+        self.logger.info("importing github data")
         github_importer = GithubImporter(db_name, project_name, repo_name, url, github_repo_full_name, self.config,
                                          self.logger)
         github_importer.import_issues()

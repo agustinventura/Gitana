@@ -12,9 +12,9 @@ class DataSource:
     def __init__(self, config, logger):
         self.config = config
         self.logger = logger
-        self.__open_connection()
+        self.__connect()
 
-    def __open_connection(self):
+    def __connect(self):
         try:
             self.cnx = mysql.connector.connect(**self.config)
         except Exception, e:
@@ -22,24 +22,31 @@ class DataSource:
                 "Error establishing database connection with configuration " + self.config + ": " + e.message)
             self.cnx = None
 
+    def __get_cursor(self):
+        try:
+            self.cnx.ping()
+        except:
+            self.__connect()
+        return self.cnx.cursor()
+
     def __del__(self):
         if self.cnx is not None:
             self.cnx.close()
 
     def get_connection(self):
         if self.cnx is None:
-            self.__open_connection()
+            self.__connect()
         return self.cnx
 
     def execute_and_commit(self, query, arguments):
-        cursor = self.cnx.cursor()
+        cursor = self.__get_cursor()
         cursor.execute(query, arguments)
         self.cnx.commit()
         cursor.close()
-        return cursor
 
-    def execute(self, query, arguments):
-        cursor = self.cnx.cursor()
+    def get_row(self, query, arguments):
+        cursor = self.__get_cursor()
         cursor.execute(query, arguments)
-        # cursor.close()
-        return cursor
+        row = cursor.fetchone()
+        cursor.close()
+        return row

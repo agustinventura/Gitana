@@ -7,6 +7,7 @@ import sys
 sys.path.insert(0, "..\\..")
 from github_reader import GithubReader
 from github_dao import GithubDAO
+from issue_writer import IssueWriter
 
 
 class GithubImporter:
@@ -29,10 +30,11 @@ class GithubImporter:
         self.repo_id = self.github_dao.get_repo_id(self.project_name, self.repo_name)
         issue_tracker_id = self.github_dao.get_issue_tracker_id(self.repo_id, self.url, self.type)
         # 2) Read all the issues
+        issue_writer = IssueWriter(self.github_reader, self.github_dao, issue_tracker_id, self.logger)
         issues = self.github_reader.load_issues_page()
         while issues is not None:
             for issue in issues:
-                print issue
+                # 3) Write the issue
+                issue_writer.write(issue)
             issues = self.github_reader.load_issues_page()
 
-            # 3) Read every data issue
