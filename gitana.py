@@ -91,10 +91,10 @@ class Gitana():
                                 self.config, self.logger)
         issue2db.extract()
 
-    def import_github_tracker_data(self, db_name, project_name, repo_name, url, github_repo_full_name):
+    def import_github_tracker_data(self, db_name, project_name, repo_name, url, github_repo_full_name, access_token):
         self.logger.info("importing github data")
-        github_importer = GithubImporter(db_name, project_name, repo_name, url, github_repo_full_name, self.config,
-                                         self.logger)
+        github_importer = GithubImporter(db_name, project_name, repo_name, url, github_repo_full_name, access_token,
+                                         self.config, self.logger)
         github_importer.import_issues()
 
     def update_bugzilla_tracker_data(self, db_name, project_name, repo_name, url, product, processes):

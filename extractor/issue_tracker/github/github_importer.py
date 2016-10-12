@@ -11,7 +11,7 @@ from issue_writer import IssueWriter
 
 
 class GithubImporter:
-    def __init__(self, db_name, project_name, repo_name, url, github_repo_name, config, logger):
+    def __init__(self, db_name, project_name, repo_name, url, github_repo_name, access_token, config, logger):
         self.logger = logger
         self.log_path = self.logger.name.rsplit('.', 1)[0] + "-" + project_name
         self.type = "github"
@@ -22,7 +22,7 @@ class GithubImporter:
         self.repo_id = None
         self.github_repo_name = github_repo_name
         config.update({'database': db_name})
-        self.github_reader = GithubReader(self.github_repo_name, self.logger)
+        self.github_reader = GithubReader(self.github_repo_name, access_token, self.logger)
         self.github_dao = GithubDAO(config, self.logger)
 
     def import_issues(self):

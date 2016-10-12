@@ -10,10 +10,10 @@ from github import Github
 
 # I'm mixing here two concepts: Data access object and iterator, should divide them
 class GithubReader:
-    def __init__(self, repo_name, logger):
+    def __init__(self, repo_name, access_token, logger):
         self.logger = logger
         self.repo_name = repo_name
-        self.github = Github()
+        self.github = Github(access_token)
         self.repository = self.__load_repository()
         self.issues = None
         self.last_page = -1

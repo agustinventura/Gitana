@@ -17,10 +17,20 @@ class IssueWriter:
         self.date_util = DateUtil()
 
     def write(self, issue):
+        self.logger.info("Writing issue " + str(issue.number))
         own_id = issue.id
         summary = issue.title
-        version = issue.milestone
-        user = issue.user
-        created_at = self.date_util.get_timestamp(issue.created_at, "%Y-%m-%d %H:%M:%S")
-        updated_at = self.date_util.get_timestamp(issue.updated_at, "%Y-%m-%d %H:%M:%S")
-        self.github_dao.insert_issue(own_id, summary, version, created_at, updated_at)
+        version = None
+        version = self.read_version(issue, version)
+        if issue.user.name is not None and issue.user.email is not None:
+            user_id = self.github_dao.get_user_id(issue.user)
+            created_at = self.date_util.get_timestamp(issue.created_at, "%Y-%m-%d %H:%M:%S")
+            updated_at = self.date_util.get_timestamp(issue.updated_at, "%Y-%m-%d %H:%M:%S")
+            self.github_dao.insert_issue(own_id, summary, version, user_id, created_at, updated_at)
+        else:
+            self.logger.info("Skipped issue " + str(issue.number) + " user has no name or email")
+
+    def read_version(self, issue, version):
+        if issue.milestone is not None:
+            version = issue.milestone.number
+        return version

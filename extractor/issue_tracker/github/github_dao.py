@@ -23,11 +23,16 @@ class GithubDAO:
         repo_id = self.__select_issue_tracker_id(repo_id, url)
         return repo_id
 
-    def insert_issue(self, own_id, summary, version, created_at, updated_at):
-        query = "INSERT IGNORE INTO issue(id, own_id, summary, version, created_at, last_change_at) " \
-                "VALUES (%s, %s, %s, %s, %s, %s)"
-        arguments = [None, own_id, summary, version, created_at, updated_at]
+    def insert_issue(self, own_id, summary, version, user_id, created_at, updated_at):
+        query = "INSERT IGNORE INTO issue(id, own_id, summary, version, reporter_id, created_at, last_change_at) " \
+                "VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        arguments = [None, own_id, summary, version, user_id, created_at, updated_at]
         self.data_source.execute_and_commit(query, arguments)
+
+    def get_user_id(self, user):
+        self.db_util.insert_user(self.data_source.get_connection(), user.name, user.email, self.logger)
+        user_id = self.db_util.select_user_id_by_name(self.data_source.get_connection(), user.name, self.logger)
+        return user_id
 
     def __insert_issue_tracker(self, repo_id, type, url):
         query = "INSERT IGNORE INTO issue_tracker " \
@@ -44,5 +49,5 @@ class GithubDAO:
         if row:
             repo_id = row[0]
         else:
-            self.logger("no issue tracker linked to " + str(url))
+            self.logger("No issue tracker with url " + str(url))
         return repo_id
