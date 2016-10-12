@@ -22,18 +22,17 @@ class IssueWriter:
             issue_id = self.__write_issue(issue, user_id)
             self.__write_labels(issue, issue_id)
             self.__write_comments(issue, issue_id)
-            # 2) Comments
-            # 3) History/Events
-            # 4) Subscribers
+            self.__write_events(issue, issue_id)
+            # 4) Subscribers (we can get it as the actors in subscribed events in issues)
             # 5) Asignee
-            # 6) Issue-commit-dependency
+            # 6) Issue-commit-dependency (we can get it from referenced/merged events in issues)
         else:
             self.logger.info("Skipped issue " + str(issue.number) + " user has no name or email")
 
     def __write_user(self, user):
         user_id = None
         if user.name is not None and user.email is not None:
-            user_id = self.github_dao.get_user_id(user)
+            user_id = self.github_dao.get_user_id(user.name, user.email)
         return user_id
 
     def __write_issue(self, issue, user_id):
@@ -68,3 +67,17 @@ class IssueWriter:
                 self.github_dao.insert_issue_comment(issue_id, user_id, comment_id, comment_body, comment_created_at)
             else:
                 self.logger.info("Skipped comment " + str(comment.id) + " user has no name or email")
+
+    def __write_events(self, issue, issue_id):
+        for event in issue.get_events():
+            if event.actor is not None:
+                creator_id = self.__write_user(event.actor)
+                if creator_id is not None:
+                    event_type_id = self.github_dao.get_event_type_id(event.event)
+                    created_at = self.date_util.get_timestamp(event.created_at, "%Y-%m-%d %H:%M:%S")
+                    # TODO: detail and target_user_id
+                    self.github_dao.insert_issue_event(issue_id, event_type_id, creator_id, created_at)
+                else:
+                    self.logger.info("Skipped event " + str(event.id) + " user has no name or email")
+            else:
+                self.logger.warning("Skipped event " + str(event.id) + " because it has no actor")
