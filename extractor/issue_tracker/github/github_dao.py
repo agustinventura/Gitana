@@ -41,18 +41,24 @@ class GithubDAO:
         label_id = self.__insert_label(label_name)
         self.__insert_issue_label(issue_id, label_id)
 
-    def __insert_label(self, label):
+    def insert_issue_comment(self, issue_id, user_id, comment_id, comment_body, comment_created_at):
+        query = "INSERT IGNORE INTO message(id, own_id, body, created_at, author_id, issue_id) " \
+                "VALUES (%s, %s, %s, %s, %s, %s)"
+        arguments = [None, comment_id, comment_body, comment_created_at, user_id, issue_id]
+        self.data_source.execute_and_commit(query, arguments)
+
+    def __insert_label(self, label_name):
         query = "INSERT IGNORE INTO label(id, name) " \
                 "VALUES (%s, %s)"
-        arguments = [None, label.name.lower()]
+        arguments = [None, label_name.lower()]
         self.data_source.execute_and_commit(query, arguments)
         query = "SELECT id FROM label WHERE name like %s"
-        arguments = [label.name.lower()]
+        arguments = [label_name.lower()]
         row = self.data_source.get_row(query, arguments)
         if row:
             label_id = row[0]
         else:
-            self.logger("No label with name " + str(label.name))
+            self.logger("No label with name " + str(label_name))
         return label_id
 
     def get_user_id(self, user):

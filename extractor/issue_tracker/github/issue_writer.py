@@ -17,10 +17,11 @@ class IssueWriter:
         self.date_util = DateUtil()
 
     def write(self, issue):
-        user_id = self.__write_user(issue)
+        user_id = self.__write_user(issue.user)
         if user_id is not None:
             issue_id = self.__write_issue(issue, user_id)
             self.__write_labels(issue, issue_id)
+            self.__write_comments(issue, issue_id)
             # 2) Comments
             # 3) History/Events
             # 4) Subscribers
@@ -29,10 +30,10 @@ class IssueWriter:
         else:
             self.logger.info("Skipped issue " + str(issue.number) + " user has no name or email")
 
-    def __write_user(self, issue):
+    def __write_user(self, user):
         user_id = None
-        if issue.user.name is not None and issue.user.email is not None:
-            user_id = self.github_dao.get_user_id(issue.user)
+        if user.name is not None and user.email is not None:
+            user_id = self.github_dao.get_user_id(user)
         return user_id
 
     def __write_issue(self, issue, user_id):
@@ -53,6 +54,17 @@ class IssueWriter:
     def __write_labels(self, issue, issue_id):
         for label in issue.get_labels():
             if label.name is not None:
-                self.github_dao.insert_issue_label(issue_id, label)
+                self.github_dao.insert_issue_label(issue_id, label.name)
             else:
                 self.logger("Skipping label " + str(label) + ", label has no name")
+
+    def __write_comments(self, issue, issue_id):
+        for comment in issue.get_comments():
+            user_id = self.__write_user(comment.user)
+            if user_id is not None:
+                comment_id = comment.id
+                comment_body = comment.body
+                comment_created_at = self.date_util.get_timestamp(comment.created_at, "%Y-%m-%d %H:%M:%S")
+                self.github_dao.insert_issue_comment(issue_id, user_id, comment_id, comment_body, comment_created_at)
+            else:
+                self.logger.info("Skipped comment " + str(comment.id) + " user has no name or email")
