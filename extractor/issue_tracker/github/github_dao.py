@@ -28,6 +28,32 @@ class GithubDAO:
                 "VALUES (%s, %s, %s, %s, %s, %s, %s)"
         arguments = [None, own_id, summary, version, user_id, created_at, updated_at]
         self.data_source.execute_and_commit(query, arguments)
+        query = "SELECT id FROM issue WHERE own_id like %s AND created_at like %s"
+        arguments = [own_id, created_at]
+        row = self.data_source.get_row(query, arguments)
+        if row:
+            issue_id = row[0]
+        else:
+            self.logger("No issue with own_id " + str(own_id) + " and created at " + str(created_at))
+        return issue_id
+
+    def insert_issue_label(self, issue_id, label_name):
+        label_id = self.__insert_label(label_name)
+        self.__insert_issue_label(issue_id, label_id)
+
+    def __insert_label(self, label):
+        query = "INSERT IGNORE INTO label(id, name) " \
+                "VALUES (%s, %s)"
+        arguments = [None, label.name.lower()]
+        self.data_source.execute_and_commit(query, arguments)
+        query = "SELECT id FROM label WHERE name like %s"
+        arguments = [label.name.lower()]
+        row = self.data_source.get_row(query, arguments)
+        if row:
+            label_id = row[0]
+        else:
+            self.logger("No label with name " + str(label.name))
+        return label_id
 
     def get_user_id(self, user):
         self.db_util.insert_user(self.data_source.get_connection(), user.name, user.email, self.logger)
@@ -51,3 +77,9 @@ class GithubDAO:
         else:
             self.logger("No issue tracker with url " + str(url))
         return repo_id
+
+    def __insert_issue_label(self, issue_id, label_id):
+        query = "INSERT IGNORE INTO issue_labelled(issue_id, label_id) " \
+                "VALUES (%s, %s)"
+        arguments = [issue_id, label_id]
+        self.data_source.execute_and_commit(query, arguments)
