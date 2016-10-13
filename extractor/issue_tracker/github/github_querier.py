@@ -9,7 +9,7 @@ from github import Github
 
 
 # I'm mixing here two concepts: Data access object and iterator, should divide them
-class GithubReader:
+class GithubQuerier:
     def __init__(self, repo_name, access_token, logger):
         self.logger = logger
         self.repo_name = repo_name

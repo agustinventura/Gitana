@@ -5,7 +5,7 @@ __author__ = 'agustin ventura'
 import sys
 
 sys.path.insert(0, "..\\..")
-from github_reader import GithubReader
+from github_querier import GithubQuerier
 from github_dao import GithubDAO
 from issue_writer import IssueWriter
 
@@ -22,7 +22,7 @@ class GithubImporter:
         self.repo_id = None
         self.github_repo_name = github_repo_name
         config.update({'database': db_name})
-        self.github_reader = GithubReader(self.github_repo_name, access_token, self.logger)
+        self.github_reader = GithubQuerier(self.github_repo_name, access_token, self.logger)
         self.github_dao = GithubDAO(config, self.logger)
 
     def import_issues(self):
