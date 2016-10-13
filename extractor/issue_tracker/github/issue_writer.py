@@ -66,7 +66,40 @@ class IssueWriter:
                 creator_id = self.__write_user(event.actor)
                 event_type_id = self.github_dao.get_event_type_id(event.event)
                 created_at = self.date_util.get_timestamp(event.created_at, "%Y-%m-%d %H:%M:%S")
-                # TODO: detail and target_user_id
-                self.github_dao.insert_issue_event(issue_id, event_type_id, creator_id, created_at)
+                detail = self.__get_issue_event_detail(issue_id, event)
+                target_user_id = self.__get_target_user_id(event)
+                self.github_dao.insert_issue_event(issue_id, event_type_id, detail, creator_id, created_at,
+                                                   target_user_id)
             else:
                 self.logger.warning("Skipped event " + str(event.id) + " because it has no actor")
+
+    def __get_issue_event_detail(self, issue_id, event):
+        detail = None
+        event_type = event.event
+        if event_type == "assigned" or event_type == "unassigned":
+            detail = event.actor.login + " " + event_type + " issue " + str(issue_id) + " to " + event._rawData.get(
+                'assignee').get('login')
+        elif event_type == "labeled" or event_type == "unlabeled":
+            detail = event.actor.login + " " + event_type + " issue " + str(issue_id) + " with " + event._rawData.get(
+                'label').get('name')
+        elif event_type == "closed" or event_type == "merged" or event_type == "referenced":
+            detail = event.actor.login + " " + event_type + " issue " + str(issue_id)
+            if event.commit_id is not None:
+                detail += " with commit " + event.commit_id
+            else:
+                detail += " without commit"
+        elif event_type == "milestoned" or event_type == "demilestoned":
+            detail = event.actor.login + " " + event_type + " issue " + str(issue_id) + " with " + event._rawData.get(
+                'milestone').get('title')
+        elif event_type == "mentioned":
+            detail = event.actor.login + " " + event_type + " in issue " + str(issue_id)
+        else:
+            detail = event.actor.login + " " + event_type + " issue " + str(issue_id)
+        return detail
+
+    def __get_target_user_id(self, event):
+        target_user_id = None
+        if event.event == "assigned" or event.event == "unassigned":
+            assignee = event._rawData.get('assignee').get('login')
+            target_user_id = self.github_dao.get_user_id(assignee, None)
+        return target_user_id

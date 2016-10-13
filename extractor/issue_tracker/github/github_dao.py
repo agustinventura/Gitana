@@ -19,19 +19,25 @@ class GithubDAO:
         return repo_id
 
     def get_issue_tracker_id(self, repo_id, url, type):
-        self.__insert_issue_tracker(repo_id, type, url)
         repo_id = self.__select_issue_tracker_id(repo_id, url)
+        if repo_id is None:
+            self.__insert_issue_tracker(repo_id, type, url)
+            repo_id = self.__select_issue_tracker_id(repo_id, url)
         return repo_id
 
     def get_user_id(self, user_name, user_email):
-        self.db_util.insert_user(self.data_source.get_connection(), user_name, user_email, self.logger)
         user_id = self.db_util.select_user_id_by_name(self.data_source.get_connection(), user_name, self.logger)
+        if user_id is None:
+            self.db_util.insert_user(self.data_source.get_connection(), user_name, user_email, self.logger)
+            user_id = self.db_util.select_user_id_by_name(self.data_source.get_connection(), user_name, self.logger)
         return user_id
 
     def get_event_type_id(self, event_type):
-        self.__insert_event_type(event_type)
-        repo_id = self.__select_event_type(event_type)
-        return repo_id
+        event_type_id = self.__select_event_type(event_type)
+        if event_type_id is None:
+            self.__insert_event_type(event_type)
+            event_type_id = self.__select_event_type(event_type)
+        return event_type_id
 
     def insert_issue(self, own_id, summary, version, user_id, created_at, updated_at):
         query = "INSERT IGNORE INTO issue(id, own_id, summary, version, reporter_id, created_at, last_change_at) " \
@@ -44,7 +50,7 @@ class GithubDAO:
         if row:
             issue_id = row[0]
         else:
-            self.logger("No issue with own_id " + str(own_id) + " and created at " + str(created_at))
+            self.logger.warning("No issue with own_id " + str(own_id) + " and created at " + str(created_at))
         return issue_id
 
     def insert_issue_label(self, issue_id, label_name):
@@ -57,10 +63,10 @@ class GithubDAO:
         arguments = [None, comment_id, comment_body, comment_created_at, user_id, issue_id]
         self.data_source.execute_and_commit(query, arguments)
 
-    def insert_issue_event(self, issue_id, event_type_id, creator_id, created_at):
-        query = "INSERT IGNORE INTO issue_event(id, issue_id, event_type_id, creator_id, created_at) " \
-                "VALUES (%s, %s, %s, %s, %s)"
-        arguments = [None, issue_id, event_type_id, creator_id, created_at]
+    def insert_issue_event(self, issue_id, event_type_id, detail, creator_id, created_at, target_user_id):
+        query = "INSERT IGNORE INTO issue_event(id, issue_id, event_type_id, detail, creator_id, created_at, target_user_id) " \
+                "VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        arguments = [None, issue_id, event_type_id, detail, creator_id, created_at, target_user_id]
         self.data_source.execute_and_commit(query, arguments)
 
     def __insert_label(self, label_name):
@@ -74,7 +80,7 @@ class GithubDAO:
         if row:
             label_id = row[0]
         else:
-            self.logger("No label with name " + str(label_name))
+            self.logger.warning("No label with name " + str(label_name))
         return label_id
 
     def __insert_issue_tracker(self, repo_id, type, url):
@@ -92,7 +98,7 @@ class GithubDAO:
         if row:
             repo_id = row[0]
         else:
-            self.logger("No issue tracker with url " + str(url))
+            self.logger.warning("No issue tracker with url " + str(url))
         return repo_id
 
     def __insert_issue_label(self, issue_id, label_id):
@@ -108,6 +114,7 @@ class GithubDAO:
         self.data_source.execute_and_commit(query, arguments)
 
     def __select_event_type(self, event_type):
+        event_type_id = None
         query = "SELECT id " \
                 "FROM issue_event_type " \
                 "WHERE name = %s"
@@ -116,5 +123,5 @@ class GithubDAO:
         if row:
             event_type_id = row[0]
         else:
-            self.logger("No event type with name " + str(event_type))
+            self.logger.warning("No event type with name " + str(event_type))
         return event_type_id
