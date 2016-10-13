@@ -4,6 +4,7 @@ import glob
 import logging
 import logging.handlers
 import os
+import sys
 import uuid
 
 import mysql.connector
@@ -20,24 +21,37 @@ from extractor.issue_tracker.github.github_importer import GithubImporter
 LOG_FOLDER_PATH = "logs"
 LOG_NAME = "gitana"
 
+
 class Gitana():
 
     def __init__(self, config, log_folder_path):
         self.config = config
         self.cnx = mysql.connector.connect(**self.config)
+        self.get_logger(log_folder_path)
 
+    def get_logger(self, log_folder_path):
         if log_folder_path:
-            self.create_log_folder(log_folder_path)
-            self.log_folder_path = log_folder_path
+            self.get_file_logger(log_folder_path)
         else:
-            self.create_log_folder(LOG_FOLDER_PATH)
-            self.log_folder_path = LOG_FOLDER_PATH
+            self.get_console_logger()
 
+    def get_console_logger(self):
+        self.logger = logging.getLogger()
+        self.logger.setLevel(logging.DEBUG)
+
+        ch = logging.StreamHandler(sys.stdout)
+        ch.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        ch.setFormatter(formatter)
+        self.logger.addHandler(ch)
+
+    def get_file_logger(self, log_folder_path):
+        self.create_log_folder(log_folder_path)
+        self.log_folder_path = log_folder_path
         self.log_path = self.log_folder_path + "/" + LOG_NAME + "-" + str(uuid.uuid4())[:5] + ".log"
         self.logger = logging.getLogger(self.log_path)
         fileHandler = logging.FileHandler(self.log_path, mode='w')
         formatter = logging.Formatter("%(asctime)s:%(levelname)s:%(message)s", "%Y-%m-%d %H:%M:%S")
-
         fileHandler.setFormatter(formatter)
         self.logger.setLevel(logging.INFO)
         self.logger.addHandler(fileHandler)

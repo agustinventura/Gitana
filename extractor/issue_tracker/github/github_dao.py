@@ -24,10 +24,8 @@ class GithubDAO:
         return repo_id
 
     def get_user_id(self, user_name, user_email):
-        user_id = None
-        if user_name is not None and user_email is not None:
-            self.db_util.insert_user(self.data_source.get_connection(), user_name, user_email, self.logger)
-            user_id = self.db_util.select_user_id_by_name(self.data_source.get_connection(), user_name, self.logger)
+        self.db_util.insert_user(self.data_source.get_connection(), user_name, user_email, self.logger)
+        user_id = self.db_util.select_user_id_by_name(self.data_source.get_connection(), user_name, self.logger)
         return user_id
 
     def get_event_type_id(self, event_type):
