@@ -32,12 +32,45 @@ class GithubDAO:
             user_id = self.db_util.select_user_id_by_name(self.data_source.get_connection(), user_name, self.logger)
         return user_id
 
+    def get_user_name(self, user_id):
+        query = "SELECT name FROM user WHERE id = %s"
+        arguments = [user_id]
+        row = self.data_source.get_row(query, arguments)
+        user_name = None
+        if row:
+            user_name = row[0]
+        else:
+            self.logger.warning("No user with id " + user_id)
+        return user_name
+
     def get_event_type_id(self, event_type):
         event_type_id = self.__select_event_type(event_type)
         if event_type_id is None:
             self.__insert_event_type(event_type)
             event_type_id = self.__select_event_type(event_type)
         return event_type_id
+
+    def get_commit_id(self, sha):
+        query = "SELECT id FROM commit WHERE sha = %s"
+        arguments = [sha]
+        row = self.data_source.get_row(query, arguments)
+        commit_id = None
+        if row:
+            commit_id = row[0]
+        else:
+            self.logger.warning("No commit with sha " + str(sha))
+        return commit_id
+
+    def get_comment_user_id(self, comment_created_at):
+        query = "SELECT author_id FROM message WHERE created_at = %s"
+        arguments = [comment_created_at]
+        row = self.data_source.get_row(query, arguments)
+        author_id = None
+        if row:
+            author_id = row[0]
+        else:
+            self.logger.warning("No comment with created_at " + str(comment_created_at))
+        return author_id
 
     def insert_issue(self, own_id, summary, version, user_id, created_at, updated_at):
         query = "INSERT IGNORE INTO issue(id, own_id, summary, version, reporter_id, created_at, last_change_at) " \
@@ -67,6 +100,21 @@ class GithubDAO:
         query = "INSERT IGNORE INTO issue_event(id, issue_id, event_type_id, detail, creator_id, created_at, target_user_id) " \
                 "VALUES (%s, %s, %s, %s, %s, %s, %s)"
         arguments = [None, issue_id, event_type_id, detail, creator_id, created_at, target_user_id]
+        self.data_source.execute_and_commit(query, arguments)
+
+    def insert_issue_commit(self, issue_id, commit_id):
+        query = "INSERT IGNORE INTO issue_commit_dependency(issue_id, commit_id) values (%s, %s)"
+        arguments = [issue_id, commit_id]
+        self.data_source.execute_and_commit(query, arguments)
+
+    def insert_issue_subscriber(self, issue_id, user_id):
+        query = "INSERT IGNORE INTO issue_subscriber(issue_id, subscriber_id) values (%s, %s)"
+        arguments = [issue_id, user_id]
+        self.data_source.execute_and_commit(query, arguments)
+
+    def insert_issue_assignee(self, issue_id, user_id):
+        query = "INSERT IGNORE INTO issue_assignee(issue_id, assignee_id) values (%s, %s)"
+        arguments = [issue_id, user_id]
         self.data_source.execute_and_commit(query, arguments)
 
     def __insert_label(self, label_name):

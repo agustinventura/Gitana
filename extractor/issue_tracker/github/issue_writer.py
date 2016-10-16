@@ -22,9 +22,7 @@ class IssueWriter:
         self.__write_labels(issue, issue_id)
         self.__write_comments(issue, issue_id)
         self.__write_events(issue, issue_id)
-        # 4) Subscribers (we can get it as the actors in subscribed events in issues)
-        # 5) Asignee
-        # 6) Issue-commit-dependency (we can get it from referenced/merged events in issues)
+        self.__write_assignees(issue, issue_id)
 
     def __write_user(self, user):
         user_id = self.github_dao.get_user_id(user.login, user.email)
@@ -63,43 +61,86 @@ class IssueWriter:
     def __write_events(self, issue, issue_id):
         for event in issue.get_events():
             if event.actor is not None:
-                creator_id = self.__write_user(event.actor)
-                event_type_id = self.github_dao.get_event_type_id(event.event)
-                created_at = self.date_util.get_timestamp(event.created_at, "%Y-%m-%d %H:%M:%S")
-                detail = self.__get_issue_event_detail(issue_id, event)
-                target_user_id = self.__get_target_user_id(event)
-                self.github_dao.insert_issue_event(issue_id, event_type_id, detail, creator_id, created_at,
-                                                   target_user_id)
+                issue_event = {"issue_id": issue_id}
+                issue_event["creator_id"] = self.__write_user(event.actor)
+                issue_event["event_type_id"] = self.github_dao.get_event_type_id(event.event)
+                issue_event["created_at"] = self.date_util.get_timestamp(event.created_at, "%Y-%m-%d %H:%M:%S")
+                issue_event["target_user_id"] = None
+                self.__process_event(event, issue_event)
+                self.github_dao.insert_issue_event(issue_event["issue_id"], issue_event["event_type_id"],
+                                                   issue_event["detail"], issue_event["creator_id"],
+                                                   issue_event["created_at"], issue_event["target_user_id"])
             else:
                 self.logger.warning("Skipped event " + str(event.id) + " because it has no actor")
 
-    def __get_issue_event_detail(self, issue_id, event):
-        detail = None
+    def __process_event(self, event, issue_event):
         event_type = event.event
         if event_type == "assigned" or event_type == "unassigned":
-            detail = event.actor.login + " " + event_type + " issue " + str(issue_id) + " to " + event._rawData.get(
-                'assignee').get('login')
+            self.__process_assigned_event(event, event_type, issue_event)
         elif event_type == "labeled" or event_type == "unlabeled":
-            detail = event.actor.login + " " + event_type + " issue " + str(issue_id) + " with " + event._rawData.get(
-                'label').get('name')
+            self.__process_labeled_event(event, event_type, issue_event)
         elif event_type == "closed" or event_type == "merged" or event_type == "referenced":
-            detail = event.actor.login + " " + event_type + " issue " + str(issue_id)
-            if event.commit_id is not None:
-                detail += " with commit " + event.commit_id
-            else:
-                detail += " without commit"
+            self.__process_commit_related_event(event, event_type, issue_event)
         elif event_type == "milestoned" or event_type == "demilestoned":
-            detail = event.actor.login + " " + event_type + " issue " + str(issue_id) + " with " + event._rawData.get(
-                'milestone').get('title')
+            self.__process_milestone_event(event, event_type, issue_event)
         elif event_type == "mentioned":
-            detail = event.actor.login + " " + event_type + " in issue " + str(issue_id)
+            self.__process_mentioned_event(event, event_type, issue_event)
+        elif event_type == "subscribed":
+            self.__process_subscription_event(event, event_type, issue_event)
         else:
-            detail = event.actor.login + " " + event_type + " issue " + str(issue_id)
-        return detail
+            self.__process_generic_event(event, event_type, issue_event)
 
-    def __get_target_user_id(self, event):
-        target_user_id = None
-        if event.event == "assigned" or event.event == "unassigned":
-            assignee = event._rawData.get('assignee').get('login')
-            target_user_id = self.github_dao.get_user_id(assignee, None)
-        return target_user_id
+    def __process_generic_event(self, event, event_type, issue_event):
+        issue_event["detail"] = event.actor.login + " " + event_type + " issue " + str(issue_event["issue_id"])
+
+    def __process_subscription_event(self, event, event_type, issue_event):
+        self.__process_generic_event(event, event_type, issue_event)
+        self.github_dao.insert_issue_subscriber(issue_event["issue_id"], issue_event["creator_id"])
+
+    def __process_mentioned_event(self, event, event_type, issue_event):
+        event_created_at = issue_event["created_at"]
+        author_id = self.github_dao.get_comment_user_id(event_created_at)
+        if author_id is not None:
+            issue_event["target_user_id"] = issue_event["creator_id"]
+            issue_event["creator_id"] = author_id
+            author_name = self.github_dao.get_user_name(author_id)
+            issue_event["detail"] = author_name + " " + event_type + " " + event.actor.login + " in issue " + \
+                                    str(issue_event["issue_id"])
+        else:
+            self.logger.warning(event.actor.login + " was mentioned in event created at " + str(event.created_at) +
+                                " but no comment was found")
+            issue_event["detail"] = event.actor.login + " " + event_type + " in issue " + str(issue_event["issue_id"])
+
+    def __process_milestone_event(self, event, event_type, issue_event):
+        issue_event["detail"] = event.actor.login + " " + event_type + " issue " + str(issue_event["issue_id"]) \
+                                + " with " + event._rawData.get('milestone').get('title')
+
+    def __process_commit_related_event(self, event, event_type, issue_event):
+        self.__process_generic_event(event, event_type, issue_event)
+        if event.commit_id is not None:
+            issue_event["detail"] += " with commit " + event.commit_id
+            commit_id = self.github_dao.get_commit_id(event.commit_id)
+            if commit_id is not None:
+                self.github_dao.insert_issue_commit(issue_event["issue_id"], commit_id)
+            else:
+                self.logger.warning("Issue " + str(issue_event["issue_id"]) + " is related to commit " +
+                                    str(event.commit_id) + " but commit is not in db. Ignoring relationship.")
+        else:
+            issue_event["detail"] += " without commit"
+
+    def __process_labeled_event(self, event, event_type, issue_event):
+        issue_event["detail"] = event.actor.login + " " + event_type + " issue " + str(
+            issue_event["issue_id"]) + " with " + event._rawData.get(
+            'label').get('name')
+
+    def __process_assigned_event(self, event, event_type, issue_event):
+        assignee = event._rawData.get('assignee').get('login')
+        issue_event["target_user_id"] = self.github_dao.get_user_id(assignee, None)
+        issue_event["detail"] = event.actor.login + " " + event_type + " issue " + str(
+            issue_event["issue_id"]) + " to " + event._rawData.get(
+            'assignee').get('login')
+
+    def __write_assignees(self, issue, issue_id):
+        if issue.assignee is not None:
+            assignee_id = self.github_dao.get_user_id(issue.assignee.login, issue.assignee.email)
+            self.github_dao.insert_issue_assignee(issue_id, assignee_id)
