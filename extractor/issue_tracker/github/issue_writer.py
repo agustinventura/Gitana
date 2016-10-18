@@ -61,7 +61,8 @@ class IssueWriter:
     def __write_events(self, issue, issue_id):
         for event in issue.get_events():
             if event.actor is not None:
-                issue_event = {"issue_id": issue_id}
+                issue_event = {"issue_id": issue_id,
+                               "issue_own_id": issue.number}
                 issue_event["creator_id"] = self.__write_user(event.actor)
                 issue_event["event_type_id"] = self.github_dao.get_event_type_id(event.event)
                 issue_event["created_at"] = self.date_util.get_timestamp(event.created_at, "%Y-%m-%d %H:%M:%S")
@@ -91,7 +92,7 @@ class IssueWriter:
             self.__process_generic_event(event, event_type, issue_event)
 
     def __process_generic_event(self, event, event_type, issue_event):
-        issue_event["detail"] = event.actor.login + " " + event_type + " issue " + str(issue_event["issue_id"])
+        issue_event["detail"] = event.actor.login + " " + event_type + " issue " + str(issue_event["issue_own_id"])
 
     def __process_subscription_event(self, event, event_type, issue_event):
         self.__process_generic_event(event, event_type, issue_event)
@@ -105,14 +106,15 @@ class IssueWriter:
             issue_event["creator_id"] = author_id
             author_name = self.github_dao.get_user_name(author_id)
             issue_event["detail"] = author_name + " " + event_type + " " + event.actor.login + " in issue " + \
-                                    str(issue_event["issue_id"])
+                                    str(issue_event["issue_own_id"])
         else:
             self.logger.warning(event.actor.login + " was mentioned in event created at " + str(event.created_at) +
                                 " but no comment was found")
-            issue_event["detail"] = event.actor.login + " " + event_type + " in issue " + str(issue_event["issue_id"])
+            issue_event["detail"] = event.actor.login + " " + event_type + " in issue " + str(
+                issue_event["issue_own_id"])
 
     def __process_milestone_event(self, event, event_type, issue_event):
-        issue_event["detail"] = event.actor.login + " " + event_type + " issue " + str(issue_event["issue_id"]) \
+        issue_event["detail"] = event.actor.login + " " + event_type + " issue " + str(issue_event["issue_own_id"]) \
                                 + " with " + event._rawData.get('milestone').get('title')
 
     def __process_commit_related_event(self, event, event_type, issue_event):
@@ -121,23 +123,23 @@ class IssueWriter:
             issue_event["detail"] += " with commit " + event.commit_id
             commit_id = self.github_dao.get_commit_id(event.commit_id)
             if commit_id is not None:
-                self.github_dao.insert_issue_commit(issue_event["issue_id"], commit_id)
+                self.github_dao.insert_issue_commit(issue_event["issue_own_id"], commit_id)
             else:
-                self.logger.warning("Issue " + str(issue_event["issue_id"]) + " is related to commit " +
+                self.logger.warning("Issue " + str(issue_event["issue_own_id"]) + " is related to commit " +
                                     str(event.commit_id) + " but commit is not in db. Ignoring relationship.")
         else:
             issue_event["detail"] += " without commit"
 
     def __process_labeled_event(self, event, event_type, issue_event):
         issue_event["detail"] = event.actor.login + " " + event_type + " issue " + str(
-            issue_event["issue_id"]) + " with " + event._rawData.get(
+            issue_event["issue_own_id"]) + " with " + event._rawData.get(
             'label').get('name')
 
     def __process_assigned_event(self, event, event_type, issue_event):
         assignee = event._rawData.get('assignee').get('login')
         issue_event["target_user_id"] = self.github_dao.get_user_id(assignee, None)
         issue_event["detail"] = event.actor.login + " " + event_type + " issue " + str(
-            issue_event["issue_id"]) + " to " + event._rawData.get(
+            issue_event["issue_own_id"]) + " to " + event._rawData.get(
             'assignee').get('login')
 
     def __write_assignees(self, issue, issue_id):
