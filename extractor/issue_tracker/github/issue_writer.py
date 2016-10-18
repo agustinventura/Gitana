@@ -35,6 +35,7 @@ class IssueWriter:
         created_at = self.date_util.get_timestamp(issue.created_at, "%Y-%m-%d %H:%M:%S")
         updated_at = self.date_util.get_timestamp(issue.updated_at, "%Y-%m-%d %H:%M:%S")
         issue_id = self.github_dao.insert_issue(own_id, summary, version, user_id, created_at, updated_at)
+        self.__write_issue_body(issue_id, user_id, issue.body, created_at)
         return issue_id
 
     def read_version(self, issue):
@@ -51,12 +52,13 @@ class IssueWriter:
                 self.logger.warning("Skipping label " + str(label) + ", label has no name")
 
     def __write_comments(self, issue, issue_id):
-        for comment in issue.get_comments():
+        for comment_pos, comment in enumerate(issue.get_comments()):
             user_id = self.__write_user(comment.user)
             comment_id = comment.id
             comment_body = comment.body
             comment_created_at = self.date_util.get_timestamp(comment.created_at, "%Y-%m-%d %H:%M:%S")
-            self.github_dao.insert_issue_comment(issue_id, user_id, comment_id, comment_body, comment_created_at)
+            self.github_dao.insert_issue_comment(issue_id, user_id, comment_id, comment_pos + 1, comment_body,
+                                                 comment_created_at)
 
     def __write_events(self, issue, issue_id):
         for event in issue.get_events():
@@ -146,3 +148,7 @@ class IssueWriter:
         if issue.assignee is not None:
             assignee_id = self.github_dao.get_user_id(issue.assignee.login, issue.assignee.email)
             self.github_dao.insert_issue_assignee(issue_id, assignee_id)
+
+    def __write_issue_body(self, issue_id, user_id, body, created_at):
+        self.github_dao.insert_issue_comment(issue_id, user_id, 0, 0, body,
+                                             created_at)
