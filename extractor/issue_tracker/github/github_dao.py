@@ -19,11 +19,11 @@ class GithubDAO:
         return repo_id
 
     def get_issue_tracker_id(self, repo_id, url, type):
-        repo_id = self.__select_issue_tracker_id(repo_id, url)
-        if repo_id is None:
+        issue_tracker_id = self.__select_issue_tracker_id(url)
+        if issue_tracker_id is None:
             self.__insert_issue_tracker(repo_id, type, url)
-            repo_id = self.__select_issue_tracker_id(repo_id, url)
-        return repo_id
+            issue_tracker_id = self.__select_issue_tracker_id(url)
+        return issue_tracker_id
 
     def get_user_id(self, user_name, user_email):
         user_id = self.db_util.select_user_id_by_name(self.data_source.get_connection(), user_name, self.logger)
@@ -137,17 +137,18 @@ class GithubDAO:
         arguments = [None, repo_id, url, type]
         self.data_source.execute_and_commit(query, arguments)
 
-    def __select_issue_tracker_id(self, repo_id, url):
+    def __select_issue_tracker_id(self, url):
+        issue_tracker_id = None
         query = "SELECT id " \
                 "FROM issue_tracker " \
                 "WHERE url = %s"
         arguments = [url]
         row = self.data_source.get_row(query, arguments)
         if row:
-            repo_id = row[0]
+            issue_tracker_id = row[0]
         else:
             self.logger.warning("No issue tracker with url " + str(url))
-        return repo_id
+        return issue_tracker_id
 
     def __insert_issue_label(self, issue_id, label_id):
         query = "INSERT IGNORE INTO issue_labelled(issue_id, label_id) " \
