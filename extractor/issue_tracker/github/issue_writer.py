@@ -76,13 +76,13 @@ class IssueWriter:
 
     def __process_event(self, event, issue_event):
         event_type = event.event
-        if event_type == "assigned" or event_type == "unassigned":
+        if event_type in ["assigned", "unassigned"]:
             self.__process_assigned_event(event, event_type, issue_event)
-        elif event_type == "labeled" or event_type == "unlabeled":
+        elif event_type in ["labeled", "unlabeled"]:
             self.__process_labeled_event(event, event_type, issue_event)
-        elif event_type == "closed" or event_type == "merged" or event_type == "referenced":
+        elif event_type in ["closed", "merged", "referenced"]:
             self.__process_commit_related_event(event, event_type, issue_event)
-        elif event_type == "milestoned" or event_type == "demilestoned":
+        elif event_type in ["milestoned", "demilestoned"]:
             self.__process_milestone_event(event, event_type, issue_event)
         elif event_type == "mentioned":
             self.__process_mentioned_event(event, event_type, issue_event)
