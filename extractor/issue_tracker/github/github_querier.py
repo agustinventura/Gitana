@@ -51,7 +51,10 @@ class GithubQuerier:
 
     def __get_last_page(self):
         last_page_url = self.issues._getLastPageUrl()
-        last_page = int(last_page_url.split("page=")[-1])
+        if last_page_url is not None:
+            last_page = int(last_page_url.split("page=")[-1])
+        else:
+            last_page = 0
         return last_page
 
     def __get_all_issues_ascending(self):
