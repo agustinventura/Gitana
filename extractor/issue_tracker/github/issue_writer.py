@@ -155,7 +155,8 @@ class IssueWriter:
     def __write_issue_body(self, issue_id, user_id, body, created_at):
         self.github_dao.insert_issue_comment(issue_id, user_id, 0, 0, body,
                                              created_at)
-        self.__write_issue_reference(body, issue_id)
+        if body is not None:
+            self.__write_issue_reference(body, issue_id)
 
     def __write_issue_reference(self, body, issue_id):
         issue_reference = self.issue_reference_pattern.search(body)
@@ -164,3 +165,7 @@ class IssueWriter:
             referenced_issue_id = self.github_dao.get_issue_id_by_own_id(referenced_issue_own_id);
             if referenced_issue_id is not None:
                 self.github_dao.insert_issue_reference(issue_id, referenced_issue_id)
+            else:
+                self.logger.warning(
+                    "Issue " + str(issue_id) + " references issue with own_id " + str(referenced_issue_own_id)
+                    + " but no one exists")
