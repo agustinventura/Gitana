@@ -72,6 +72,17 @@ class GithubDAO:
             self.logger.warning("No comment with created_at " + str(comment_created_at))
         return author_id
 
+    def get_issue_id_by_own_id(self, own_id):
+        query = "SELECT id FROM issue WHERE own_id = %s"
+        arguments = [own_id]
+        row = self.data_source.get_row(query, arguments)
+        issue_id = None
+        if row:
+            issue_id = row[0]
+        else:
+            self.logger.warning("No issue with own_id " + str(own_id))
+        return issue_id
+
     def insert_issue(self, own_id, summary, version, user_id, created_at, updated_at):
         query = "INSERT IGNORE INTO issue(id, own_id, summary, version, reporter_id, created_at, last_change_at) " \
                 "VALUES (%s, %s, %s, %s, %s, %s, %s)"
@@ -115,6 +126,11 @@ class GithubDAO:
     def insert_issue_assignee(self, issue_id, user_id):
         query = "INSERT IGNORE INTO issue_assignee(issue_id, assignee_id) values (%s, %s)"
         arguments = [issue_id, user_id]
+        self.data_source.execute_and_commit(query, arguments)
+
+    def insert_issue_reference(self, issue_id, referenced_issue_id):
+        query = "INSERT IGNORE INTO issue_dependency(issue_source_id, issue_target_id, type) values (%s, %s, %s)"
+        arguments = [issue_id, referenced_issue_id, "referenced"]
         self.data_source.execute_and_commit(query, arguments)
 
     def __insert_label(self, label_name):

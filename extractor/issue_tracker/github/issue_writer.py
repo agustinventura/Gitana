@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 __author__ = 'agustin ventura'
 
+import re
 import sys
 
 sys.path.insert(0, "..\\..")
@@ -15,6 +16,7 @@ class IssueWriter:
         self.issue_tracker_id = issue_tracker_id
         self.logger = logger
         self.date_util = DateUtil()
+        self.issue_reference_pattern = re.compile('\s#\d+\s')
 
     def write(self, issue):
         user_id = self.__write_user(issue.user)
@@ -59,6 +61,7 @@ class IssueWriter:
             comment_created_at = self.date_util.get_timestamp(comment.created_at, "%Y-%m-%d %H:%M:%S")
             self.github_dao.insert_issue_comment(issue_id, user_id, comment_id, comment_pos + 1, comment_body,
                                                  comment_created_at)
+            self.__write_issue_reference(comment_body, issue_id)
 
     def __write_events(self, issue, issue_id):
         for event in issue.get_events():
@@ -152,3 +155,12 @@ class IssueWriter:
     def __write_issue_body(self, issue_id, user_id, body, created_at):
         self.github_dao.insert_issue_comment(issue_id, user_id, 0, 0, body,
                                              created_at)
+        self.__write_issue_reference(body, issue_id)
+
+    def __write_issue_reference(self, body, issue_id):
+        issue_reference = self.issue_reference_pattern.search(body)
+        if issue_reference is not None:
+            referenced_issue_own_id = issue_reference.group()[2:]
+            referenced_issue_id = self.github_dao.get_issue_id_by_own_id(referenced_issue_own_id);
+            if referenced_issue_id is not None:
+                self.github_dao.insert_issue_reference(issue_id, referenced_issue_id)
