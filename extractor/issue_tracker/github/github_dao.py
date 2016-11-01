@@ -83,7 +83,7 @@ class GithubDAO:
             self.logger.warning("No issue with own_id " + str(own_id))
         return issue_id
 
-    def insert_issue(self, own_id, summary, version, user_id, created_at, updated_at):
+    def insert_issue(self, user_id, own_id, summary, version, created_at, updated_at):
         query = "INSERT IGNORE INTO issue(id, own_id, summary, version, reporter_id, created_at, last_change_at) " \
                 "VALUES (%s, %s, %s, %s, %s, %s, %s)"
         arguments = [None, own_id, summary, version, user_id, created_at, updated_at]
