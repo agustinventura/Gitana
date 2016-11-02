@@ -2,13 +2,12 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import re
-import string
-from datetime import datetime
-
 from git import *
-
+import re
+from datetime import datetime
+import string
 from extractor.util.date_util import DateUtil
+import time
 
 
 class GitQuerier():
@@ -75,6 +74,9 @@ class GitQuerier():
             flag = True
 
         return flag
+
+    def get_commit_time(self, string_time):
+        return self.date_util.get_time_fromtimestamp(string_time, "%Y-%m-%d %H:%M:%S")
 
     #not used, retrieve all the files currently present in a given branch
     def get_files_in_ref(self, ref):
@@ -189,12 +191,20 @@ class GitQuerier():
         if isinstance(diff, tuple):
             flag = diff.get('renamed')
         else:
-            if diff.renamed:
-                flag = True
-            #sometimes the library does not set the renamed value to True even if the file is actually renamed
-            elif (not diff.a_blob) and (not diff.b_blob):
-                if re.match(r"^(.*)\nrename from(.*)\nrename to(.*)$", diff.diff, re.M):
-                   flag = True
+            try:
+                if diff.renamed:
+                    flag = True
+            except:
+                flag = False
+
+            if not flag:
+                try:
+                    #sometimes the library does not set the renamed value to True even if the file is actually renamed
+                    if (not diff.a_blob) and (not diff.b_blob):
+                        if re.match(r"^(.*)\nrename from(.*)\nrename to(.*)$", diff.diff, re.M):
+                           flag = True
+                except:
+                    flag = False
         return flag
 
     def get_stats_for_file(self, commit_stats_files, file_name):
@@ -246,10 +256,13 @@ class GitQuerier():
             elif prop == "committed_date":
                 found = commit.committed_date
         except:
-            found = None
-            self.logger.error(
-                "something went wrong when trying to retrieve the attribute " + prop + " from the commit " + str(
-                    commit.hexsha))
+            #ugly but effective. GitPython may fail in retrieving properties with large content. Waiting some seconds seems to fix the problem
+            try:
+                time.sleep(5)
+                found = self.get_commit_property(commit, prop)
+            except:
+                found = None
+                self.logger.error("something went wrong when trying to retrieve the attribute " + prop + " from the commit " + str(commit.hexsha))
 
         return found
 

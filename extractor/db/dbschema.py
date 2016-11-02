@@ -39,22 +39,6 @@ class DbSchema():
 
         cursor.close()
 
-    def get_project_id(self, project_name, db_name):
-        found = None
-        self.set_database(db_name)
-        cursor = self.cnx.cursor()
-        query = "SELECT id FROM project WHERE name = %s"
-        arguments = [project_name]
-        cursor.execute(query, arguments)
-
-        row = cursor.fetchone()
-        cursor.close()
-
-        if row:
-            found = row[0]
-
-        return found
-
     def list_projects(self, db_name):
         project_names = []
         self.set_database(db_name)
@@ -408,9 +392,9 @@ class DbSchema():
 
         create_table_message = "CREATE TABLE message ( " \
                                "id int(20) AUTO_INCREMENT PRIMARY KEY, " \
-                               "own_id int(20), " \
+                               "own_id varchar(20), " \
                                "pos int(10), " \
-                               "type int(20), " \
+                               "type_id int(20), " \
                                "issue_id int(20), " \
                                "topic_id int(20), " \
                                "channel_id int(20), " \
@@ -422,10 +406,9 @@ class DbSchema():
                                ") ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;"
 
         create_table_message_dependency = "CREATE TABLE message_dependency ( " \
-                                          "id int(20) AUTO_INCREMENT PRIMARY KEY, " \
                                           "source_message_id int(20), " \
                                           "target_message_id int(20), " \
-                                          "CONSTRAINT ip UNIQUE (source_message_id, target_message_id) " \
+                                          "PRIMARY KEY st (source_message_id, target_message_id) " \
                                           ") ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;"
 
         create_table_message_type = "CREATE TABLE message_type ( " \
@@ -439,11 +422,12 @@ class DbSchema():
                                                                "(NULL, 'comment'), " \
                                                                "(NULL, 'accepted_answer'), " \
                                                                "(NULL, 'reply'), " \
-                                                               "(NULL, 'file_upload');"
+                                                               "(NULL, 'file_upload'), " \
+                                                               "(NULL, 'info');"
 
         create_table_attachment = "CREATE TABLE attachment ( " \
                                   "id int(20) AUTO_INCREMENT PRIMARY KEY, " \
-                                  "own_id int(20), " \
+                                  "own_id varchar(20), " \
                                   "message_id int(20), " \
                                   "name varchar(256), " \
                                   "extension varchar(10), " \
@@ -581,14 +565,15 @@ class DbSchema():
         create_table_issue_tracker = "CREATE TABLE issue_tracker ( " \
                                      "id int(20) AUTO_INCREMENT PRIMARY KEY, " \
                                      "repo_id int(20), " \
+                                     "name varchar(512), " \
                                      "url varchar(512), " \
                                      "type varchar(512), " \
-                                     "CONSTRAINT name UNIQUE (repo_id, url)" \
+                                     "CONSTRAINT name UNIQUE (repo_id, name)" \
                                      ") ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;"
 
         create_table_issue = "CREATE TABLE issue ( " \
                              "id int(20) AUTO_INCREMENT PRIMARY KEY, " \
-                             "own_id int(20), " \
+                             "own_id varchar(20), " \
                              "issue_tracker_id int(20), " \
                              "summary varchar(512), " \
                              "component varchar(256), " \
@@ -650,9 +635,21 @@ class DbSchema():
         create_table_issue_dependency = "CREATE TABLE issue_dependency ( " \
                                         "issue_source_id int(20), " \
                                         "issue_target_id int(20), " \
-                                        "type varchar(256), " \
-                                        "PRIMARY KEY st (issue_source_id, issue_target_id) " \
+                                        "type_id int(20), " \
+                                        "PRIMARY KEY st (issue_source_id, issue_target_id, type_id) " \
                                         ") ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;"
+
+        create_issue_dependency_type = "CREATE TABLE issue_dependency_type (" \
+                                       "id int(20) AUTO_INCREMENT PRIMARY KEY, " \
+                                       "name varchar(256), " \
+                                       "CONSTRAINT name UNIQUE (name), " \
+                                       "INDEX n (name) " \
+                                       ") ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;"
+
+        insert_issue_dependency_type = "INSERT INTO issue_dependency_type VALUES (NULL, 'block'), " \
+                                                                                "(NULL, 'depends'), " \
+                                                                                "(NULL, 'related'), " \
+                                                                                "(NULL, 'duplicated');"
 
         cursor.execute(create_table_issue_tracker)
         cursor.execute(create_table_issue)
@@ -663,6 +660,8 @@ class DbSchema():
         cursor.execute(create_table_issue_labelled)
         cursor.execute(create_issue_commit_dependency)
         cursor.execute(create_table_issue_dependency)
+        cursor.execute(create_issue_dependency_type)
+        cursor.execute(insert_issue_dependency_type)
         cursor.close()
         return
 
@@ -672,14 +671,15 @@ class DbSchema():
         create_table_forum = "CREATE TABLE forum ( " \
                              "id int(20) AUTO_INCREMENT PRIMARY KEY, " \
                              "project_id int(20), " \
+                             "name varchar(512), " \
                              "url varchar(512), " \
                              "type varchar(512), " \
-                             "CONSTRAINT name UNIQUE (project_id, url)" \
+                             "CONSTRAINT name UNIQUE (project_id, name)" \
                              ") ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;"
 
         create_table_topic = "CREATE TABLE topic ( " \
                              "id int(20) AUTO_INCREMENT PRIMARY KEY, " \
-                             "own_id int(20), " \
+                             "own_id varchar(20), " \
                              "forum_id int(20), " \
                              "name varchar(256), " \
                              "votes int(10), " \
@@ -700,18 +700,20 @@ class DbSchema():
         create_table_instant_messaging = "CREATE TABLE instant_messaging ( " \
                                          "id int(20) AUTO_INCREMENT PRIMARY KEY, " \
                                          "project_id int(20), " \
+                                         "name varchar(512), " \
                                          "url varchar(512), " \
                                          "type varchar(512), " \
-                                         "CONSTRAINT name UNIQUE (project_id, url)" \
+                                         "CONSTRAINT name UNIQUE (project_id, name)" \
                                          ") ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;"
 
         create_table_channel = "CREATE TABLE channel ( " \
                                "id int(20) AUTO_INCREMENT PRIMARY KEY, " \
-                               "own_id int(20), " \
+                               "own_id varchar(20), " \
                                "instant_messaging_id int(20), " \
                                "name varchar(256), " \
                                "description varchar(512), " \
                                "created_at timestamp DEFAULT '0000-00-00 00:00:00', " \
+                               "last_change_at timestamp DEFAULT '0000-00-00 00:00:00', " \
                                "CONSTRAINT name UNIQUE (instant_messaging_id, own_id)" \
                                ") ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;"
 

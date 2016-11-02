@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import mysql.connector
-from mysql.connector import errorcode
 from datetime import datetime
 import logging
 import logging.handlers
@@ -11,9 +9,10 @@ import sys
 sys.path.insert(0, "..//..//..")
 
 from querier_bugzilla import BugzillaQuerier
+from bugzilla_dao import BugzillaDao
 
 
-class IssueDependency2Db(object):
+class BugzillaIssueDependency2Db(object):
 
     def __init__(self, db_name,
                  repo_id, issue_tracker_id, url, product, interval,
@@ -40,19 +39,10 @@ class IssueDependency2Db(object):
 
         try:
             self.querier = BugzillaQuerier(self.url, self.product, self.logger)
-            self.cnx = mysql.connector.connect(**self.config)
+            self.dao = BugzillaDao(self.config, self.url)
             self.extract()
         except Exception, e:
             self.logger.error("Issue2Db failed", exc_info=True)
-
-    def insert_issue_dependency(self, issue_source_id, issue_target_id, type):
-        cursor = self.cnx.cursor()
-        query = "INSERT IGNORE INTO issue_dependency " \
-                "VALUES (%s, %s, %s)"
-        arguments = [issue_source_id, issue_target_id, type]
-        cursor.execute(query, arguments)
-        self.cnx.commit()
-        cursor.close()
 
     def extract_single_issue_dependency(self, issue_id, data, type):
         extracted = None
@@ -65,39 +55,7 @@ class IssueDependency2Db(object):
         if extracted:
             dependent_issue = self.select_issue_id(extracted)
             if dependent_issue:
-                self.insert_issue_dependency(issue_id, dependent_issue, type)
-
-    def select_issue_own_id(self, issue_id):
-        found = None
-        cursor = self.cnx.cursor()
-        query = "SELECT i.own_id " \
-                "FROM issue i JOIN issue_tracker it ON i.issue_tracker_id = it.id " \
-                "WHERE i.id = %s AND issue_tracker_id = %s AND repo_id = %s"
-        arguments = [issue_id, self.issue_tracker_id, self.repo_id]
-        cursor.execute(query, arguments)
-
-        row = cursor.fetchone()
-        cursor.close()
-
-        if row:
-            found = row[0]
-
-        return found
-
-    def select_issue_id(self, issue_own_id):
-        found = None
-        cursor = self.cnx.cursor()
-        query = "SELECT id FROM issue WHERE own_id = %s AND issue_tracker_id = %s"
-        arguments = [issue_own_id, self.issue_tracker_id]
-        cursor.execute(query, arguments)
-
-        row = cursor.fetchone()
-        cursor.close()
-
-        if row:
-            found = row[0]
-
-        return found
+                self.dao.insert_issue_dependency(issue_id, dependent_issue, type)
 
     def extract_issue_dependency(self, issue_id, obj, type):
         if isinstance(obj, list):
@@ -116,14 +74,14 @@ class IssueDependency2Db(object):
         return flag
 
     def set_dependencies(self):
-        cursor = self.cnx.cursor()
+        cursor = self.dao.get_cursor()
         query = "SELECT i.id FROM issue i " \
                 "JOIN issue_tracker it ON i.issue_tracker_id = it.id " \
                 "WHERE i.id >= %s AND i.id <= %s AND issue_tracker_id = %s AND repo_id = %s"
         arguments = [self.interval[0], self.interval[-1], self.issue_tracker_id, self.repo_id]
-        cursor.execute(query, arguments)
+        self.dao.execute(cursor, query, arguments)
 
-        row = cursor.fetchone()
+        row = self.dao.fetchone(cursor)
 
         while row:
             try:
@@ -132,34 +90,34 @@ class IssueDependency2Db(object):
                 issue = self.querier.get_issue(issue_own_id)
 
                 if issue.blocks:
-                    self.extract_issue_dependency(issue_id, issue.blocks, "block")
+                    self.extract_issue_dependency(issue_id, self.querier.get_issue_blocks(issue), self.dao.get_issue_dependency_type_id("block"))
 
                 if issue.depends_on:
-                    self.extract_issue_dependency(issue_id, issue.depends_on, "depends")
+                    self.extract_issue_dependency(issue_id, self.querier.get_issue_depends_on(issue), self.dao.get_issue_dependency_type_id("depends"))
 
                 if issue.see_also:
-                    self.extract_issue_dependency(issue_id, issue.see_also, "related")
+                    self.extract_issue_dependency(issue_id, self.querier.get_issue_see_also(issue), self.dao.get_issue_dependency_type_id("related"))
 
                 if self.is_duplicated(issue):
                     if issue.dupe_of:
-                        self.extract_issue_dependency(issue_id, issue.dupe_of, "duplicated")
+                        self.extract_issue_dependency(issue_id, self.querier.get_issue_dupe_of(issue), self.dao.get_issue_dependency_type_id("duplicated"))
 
             except Exception, e:
                 self.logger.error("something went wrong with the following issue id: " + str(issue_id) + " - tracker id " + str(self.issue_tracker_id), exc_info=True)
 
-            row = cursor.fetchone()
+            row = self.dao.fetchone(cursor)
 
-        cursor.close()
+        self.dao.close_cursor(cursor)
 
     def extract(self):
         try:
             start_time = datetime.now()
             self.set_dependencies()
             end_time = datetime.now()
-            self.cnx.close()
+            self.dao.close_connection()
 
             minutes_and_seconds = divmod((end_time-start_time).total_seconds(), 60)
-            self.logger.info("process finished after " + str(minutes_and_seconds[0])
+            self.logger.info("BugzillaIssueDependency2Db finished after " + str(minutes_and_seconds[0])
                            + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
         except Exception, e:
-            self.logger.error("Issue2Db failed", exc_info=True)
+            self.logger.error("BugzillaIssueDependency2Db failed", exc_info=True)

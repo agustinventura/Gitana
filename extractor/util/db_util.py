@@ -3,9 +3,17 @@
 __author__ = 'valerio cosentino'
 
 import mysql.connector
+from mysql.connector import errorcode
 
 
 class DbUtil():
+
+    def get_connection(self, config):
+        return mysql.connector.connect(**config)
+
+    def close_connection(self, cnx):
+        cnx.close()
+
     def lowercase(self, str):
         if str:
             str = str.lower()
@@ -26,7 +34,7 @@ class DbUtil():
         if row:
             found = row[0]
         else:
-            logger.error("the project " + project_name + " does not exist")
+            logger.error("the project " + str(project_name) + " does not exist")
 
         return found
 
@@ -40,6 +48,7 @@ class DbUtil():
         cursor.close()
 
     def select_repo_id(self, cnx, project_id, repo_name, logger):
+        found = None
         cursor = cnx.cursor()
         query = "SELECT id " \
                 "FROM repository " \
@@ -49,6 +58,7 @@ class DbUtil():
 
         row = cursor.fetchone()
         cursor.close()
+
         if row:
             found = row[0]
         else:
@@ -61,46 +71,64 @@ class DbUtil():
 
         query = "INSERT IGNORE INTO user " \
                 "VALUES (%s, %s, %s)"
-        arguments = [None, self.lowercase(name), self.lowercase(email)]
+        arguments = [None, name, email]
         cursor.execute(query, arguments)
         cnx.commit()
         cursor.close()
 
     def select_user_id_by_email(self, cnx, email, logger):
-        cursor = cnx.cursor()
-        query = "SELECT id " \
-                "FROM user " \
-                "WHERE email = %s"
-        arguments = [email]
-        cursor.execute(query, arguments)
-
-        row = cursor.fetchone()
-        cursor.close()
-
         found = None
-        if row:
-            found = row[0]
-        else:
-            logger.warning("there is not user with this email " + email)
+        if email:
+            cursor = cnx.cursor()
+            query = "SELECT id " \
+                    "FROM user " \
+                    "WHERE email = %s"
+            arguments = [email]
+            cursor.execute(query, arguments)
+
+            row = cursor.fetchone()
+            cursor.close()
+
+            if row:
+                found = row[0]
+            else:
+                logger.warning("there is not user with this email " + email)
 
         return found
 
     def select_user_id_by_name(self, cnx, name, logger):
+        found = None
+        if name:
+            found = None
+            cursor = cnx.cursor()
+            query = "SELECT id " \
+                    "FROM user " \
+                    "WHERE name = %s"
+            arguments = [name]
+            cursor.execute(query, arguments)
+
+            row = cursor.fetchone()
+            cursor.close()
+
+            if row:
+                found = row[0]
+            else:
+                logger.warning("there is not user with this name " + name)
+
+        return found
+
+    def get_issue_dependency_type_id(self, cnx, name):
+        found = None
         cursor = cnx.cursor()
-        query = "SELECT id " \
-                "FROM user " \
-                "WHERE name = %s"
+        query = "SELECT id FROM issue_dependency_type WHERE name = %s"
         arguments = [name]
         cursor.execute(query, arguments)
 
         row = cursor.fetchone()
         cursor.close()
 
-        found = None
         if row:
             found = row[0]
-        else:
-            logger.warning("there is not user with this name " + name)
 
         return found
 

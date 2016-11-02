@@ -3,7 +3,6 @@
 __author__ = 'valerio cosentino'
 
 import bugzilla
-
 from extractor.util.date_util import DateUtil
 
 
@@ -17,7 +16,7 @@ class BugzillaQuerier():
         self.date_util = DateUtil()
 
     def get_issue_ids(self, from_issue_id, to_issue_id, before_date):
-        # TODO - include_fields seems not to work properly, http://bugzilla.readthedocs.io/en/latest/api/core/v1/bug.html
+        #TODO - include_fields seems not to work properly, http://bugzilla.readthedocs.io/en/latest/api/core/v1/bug.html
         query = self.bzapi.build_query(product=self.product, include_fields=["id", "creation_time"])
         result = self.bzapi.query(query)
         if from_issue_id and not to_issue_id:
@@ -40,9 +39,74 @@ class BugzillaQuerier():
 
         return name
 
+    def get_issue_creator(self, issue):
+        return issue.creator
+
+    def get_issue_version(self, issue):
+        return issue.version
+
+    def issue_last_change_time(self, issue):
+        return issue.last_change_time
+
+    def get_issue_creation_time(self, issue):
+        return issue.creation_time
+
+    def get_issue_priority(self, issue):
+        return issue.priority
+
+    def get_issue_severity(self, issue):
+        return issue.severity
+
+    def get_issue_operating_system(self, issue):
+        return issue.op_sys
+
+    def get_issue_summary(self, issue):
+        return issue.summary
+
+    def get_issue_component(self, issue):
+        return issue.component
+
+    def get_issue_history(self, issue):
+        return issue.get_history().get('bugs')[0].get('history')
+
+    def get_comment_property(self, comment, property):
+        return comment.get(property)
+
+    def get_event_property(self, event, property):
+        return event.get(property)
+
+    def get_change_property(self, change, property):
+        return change.get(property)
+
+    def get_issue_tags(self, issue):
+        return issue.gettags()
+
+    def get_issue_keywords(self, issue):
+        return issue.keywords
+
+    def get_issue_comments(self, issue):
+        return issue.getcomments()
+
+    def get_issue_cc(self, issue):
+        return issue.cc
+
+    def get_issue_assignee(self, issue):
+        return issue.assigned_to
+
+    def get_issue_see_also(self, issue):
+        return issue.see_also
+
+    def get_issue_blocks(self, issue):
+        return issue.blocks
+
+    def get_issue_dupe_of(self, issue):
+        return issue.dupe_of
+
+    def get_issue_depends_on(self, issue):
+        return issue.depends_on
+
     def get_issue(self, bug_id):
         return self.bzapi.getbug(bug_id)
 
     def get_attachment(self, attachment_id):
         return self.bzapi.openattachment(attachment_id)
-

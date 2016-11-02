@@ -4,3 +4,6 @@ gitpython
 python-bugzilla
 pygithub
 selenium
+py-stackexchange
+beautifulsoup
+slacker
