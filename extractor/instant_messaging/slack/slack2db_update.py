@@ -2,18 +2,16 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-from datetime import datetime
-import multiprocessing
 import sys
+from datetime import datetime
+
 sys.path.insert(0, "..//..//..")
 
-from extractor.util import multiprocessing_util
 from querier_slack import SlackQuerier
-from slack2db_extract_channel import SlackChannel2Db
 from slack_dao import SlackDao
 
-class Slack2DbUpdate():
 
+class Slack2DbUpdate():
     def __init__(self, db_name, project_name, instant_messaging_name, tokens,
                  config, logger):
         self.logger = logger
@@ -34,7 +32,7 @@ class Slack2DbUpdate():
 
     def get_channels(self, instant_messaging_id):
         print "here"
-        #TODO
+        # TODO
 
     def update(self):
         try:
@@ -45,8 +43,8 @@ class Slack2DbUpdate():
             self.cnx.close()
             end_time = datetime.now()
 
-            minutes_and_seconds = divmod((end_time-start_time).total_seconds(), 60)
+            minutes_and_seconds = divmod((end_time - start_time).total_seconds(), 60)
             self.logger.info("Slack2DbUpdate extract finished after " + str(minutes_and_seconds[0])
-                         + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
+                             + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
         except:
             self.logger.error("Slack2DbUpdate extract failed", exc_info=True)

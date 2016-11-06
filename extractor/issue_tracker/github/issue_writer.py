@@ -23,6 +23,11 @@ class IssueWriter:
         self.__write_events(issue, issue_id)
         self.__write_assignees(issue, issue_id)
 
+    def update(self, issue):
+        user_data = self.github_querier.read_user(issue)
+        user_id = self.__write_user(user_data)
+        issue_id = self.__update_issue(issue, user_id)
+
     def __write_user(self, user_data):
         user_id = self.github_dao.get_user_id(user_data["login"], user_data["email"])
         return user_id
@@ -31,8 +36,16 @@ class IssueWriter:
         issue_data = self.github_querier.read_issue(issue)
         issue_id = self.github_dao.insert_issue(user_id, issue_data["own_id"], issue_data["summary"],
                                                 issue_data["version"], issue_data["created_at"],
-                                                issue_data["updated_at"])
+                                                issue_data["updated_at"], self.issue_tracker_id)
         self.__write_issue_body(issue_id, user_id, issue_data)
+        return issue_id
+
+    def __update_issue(self, issue, user_id):
+        issue_data = self.github_querier.read_issue(issue)
+        issue_id = self.github_dao.get_issue_id_by_own_id(issue_data["own_id"], self.issue_tracker_id)
+        self.github_dao.update_issue(issue_id, user_id, issue_data["summary"], issue_data["version"],
+                                     issue_data["created_at"], issue_data["updated_at"])
+        # self.__write_issue_body(issue_id, user_id, issue_data)
         return issue_id
 
     def __write_labels(self, issue, issue_id):
@@ -146,14 +159,21 @@ class IssueWriter:
                                              issue_data["created_at"])
         if issue_data["body"] is not None:
             self.__write_issue_reference(issue_data["body"], issue_id)
+            self.__write_issue_attachment(issue_data["body"], issue_id)
 
     def __write_issue_reference(self, body, issue_id):
-        referenced_issue_own_id = self.github_querier.read_issue_reference(body)
-        if referenced_issue_own_id is not None:
-            referenced_issue_id = self.github_dao.get_issue_id_by_own_id(referenced_issue_own_id);
+        referenced_issues_own_id = self.github_querier.read_issue_references(body)
+        for referenced_issue_own_id in referenced_issues_own_id:
+            referenced_issue_id = self.github_dao.get_issue_id_by_own_id(referenced_issue_own_id[2:],
+                                                                         self.issue_tracker_id)
             if referenced_issue_id is not None:
                 self.github_dao.insert_issue_reference(issue_id, referenced_issue_id)
             else:
                 self.logger.warning(
                     "Issue " + str(issue_id) + " references issue with own_id " + str(referenced_issue_own_id)
                     + " but no one exists")
+
+    def __write_issue_attachment(self, body, issue_id):
+        attachment_urls = self.github_querier.read_issue_attachments(body)
+        for attachment_url in attachment_urls:
+            self.github_dao.insert_issue_attachment(issue_id, attachment_url)

@@ -6,7 +6,6 @@ from extractor.util.db_util import DbUtil
 
 
 class SlackDao():
-
     def __init__(self, config, logger):
         self.config = config
         self.logger = logger
@@ -114,7 +113,8 @@ class SlackDao():
             cursor.execute(query, arguments)
             self.cnx.commit()
         except:
-            self.logger.warning("message " + str(own_id) + ") for channel id: " + str(channel_id) + " not inserted", exc_info=True)
+            self.logger.warning("message " + str(own_id) + ") for channel id: " + str(channel_id) + " not inserted",
+                                exc_info=True)
 
     def get_user_id(self, user_name, user_email):
         if user_email:

@@ -72,9 +72,9 @@ class GithubDAO:
             self.logger.warning("No comment with created_at " + str(comment_created_at))
         return author_id
 
-    def get_issue_id_by_own_id(self, own_id):
-        query = "SELECT id FROM issue WHERE own_id = %s"
-        arguments = [own_id]
+    def get_issue_id_by_own_id(self, own_id, issue_tracker_id):
+        query = "SELECT id FROM issue WHERE own_id = %s and issue_tracker_id = %s"
+        arguments = [own_id, issue_tracker_id]
         row = self.data_source.get_row(query, arguments)
         issue_id = None
         if row:
@@ -83,10 +83,22 @@ class GithubDAO:
             self.logger.warning("No issue with own_id " + str(own_id))
         return issue_id
 
-    def insert_issue(self, user_id, own_id, summary, version, created_at, updated_at):
-        query = "INSERT IGNORE INTO issue(id, own_id, summary, version, reporter_id, created_at, last_change_at) " \
-                "VALUES (%s, %s, %s, %s, %s, %s, %s)"
-        arguments = [None, own_id, summary, version, user_id, created_at, updated_at]
+    def get_own_ids(self, issue_tracker_id):
+        query = "SELECT own_id FROM issue WHERE issue_tracker_id = %s"
+        arguments = [issue_tracker_id]
+        rows = self.data_source.get_rows(query, arguments)
+        issue_ids = []
+        if rows:
+            for row in rows:
+                issue_ids.append(row[0])
+        else:
+            self.logger.warning("No issues for issue tracker " + str(issue_tracker_id))
+        return issue_ids
+
+    def insert_issue(self, user_id, own_id, summary, version, created_at, updated_at, issue_tracker_id):
+        query = "INSERT IGNORE INTO issue(id, own_id, summary, version, reporter_id, issue_tracker_id, created_at, " \
+                "last_change_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+        arguments = [None, own_id, summary, version, user_id, issue_tracker_id, created_at, updated_at]
         self.data_source.execute_and_commit(query, arguments)
         query = "SELECT id FROM issue WHERE own_id like %s AND created_at like %s"
         arguments = [own_id, created_at]
@@ -96,6 +108,12 @@ class GithubDAO:
         else:
             self.logger.warning("No issue with own_id " + str(own_id) + " and created at " + str(created_at))
         return issue_id
+
+    def update_issue(self, issue_id, user_id, summary, version, created_at, updated_at):
+        query = "UPDATE issue SET summary = %s, version = %s, reporter_id = %s, created_at = %s, last_change_at = %s" \
+                "WHERE id = %s"
+        arguments = [summary, version, user_id, created_at, updated_at, issue_id]
+        self.data_source.execute_and_commit(query, arguments)
 
     def insert_issue_label(self, issue_id, label_name):
         label_id = self.__insert_label(label_name)
@@ -129,8 +147,13 @@ class GithubDAO:
         self.data_source.execute_and_commit(query, arguments)
 
     def insert_issue_reference(self, issue_id, referenced_issue_id):
-        query = "INSERT IGNORE INTO issue_dependency(issue_source_id, issue_target_id, type) values (%s, %s, %s)"
-        arguments = [issue_id, referenced_issue_id, "referenced"]
+        query = "INSERT IGNORE INTO issue_dependency(issue_source_id, issue_target_id, type_id) values (%s, %s, %s)"
+        arguments = [issue_id, referenced_issue_id, 3]
+        self.data_source.execute_and_commit(query, arguments)
+
+    def insert_issue_attachment(self, issue_id, attachment_url):
+        query = "INSERT IGNORE INTO attachment(id, message_id, url) values (%s, %s, %s)"
+        arguments = [None, issue_id, attachment_url]
         self.data_source.execute_and_commit(query, arguments)
 
     def __insert_label(self, label_name):
@@ -148,7 +171,7 @@ class GithubDAO:
         return label_id
 
     def __insert_issue_tracker(self, repo_id, type, url):
-        query = "INSERT IGNORE INTO issue_tracker " \
+        query = "INSERT IGNORE INTO issue_tracker(id, repo_id, url, type) " \
                 "VALUES (%s, %s, %s, %s)"
         arguments = [None, repo_id, url, type]
         self.data_source.execute_and_commit(query, arguments)
@@ -190,3 +213,27 @@ class GithubDAO:
         else:
             self.logger.warning("No event type with name " + str(event_type))
         return event_type_id
+
+    def get_issue_max_created_at(self, issue_tracker_id):
+        max_created_at = None
+        query = "SELECT MAX(created_at) " \
+                "FROM issue WHERE issue_tracker_id = %s"
+        arguments = [issue_tracker_id]
+        row = self.data_source.get_row(query, arguments)
+        if row:
+            max_created_at = row[0]
+        else:
+            self.logger.warning("No max created_at in issue")
+        return max_created_at
+
+    def get_issue_max_last_change_at(self, issue_tracker_id):
+        max_last_change_at = None
+        query = "SELECT MAX(last_change_at) " \
+                "FROM issue WHERE issue_tracker_id = %s"
+        arguments = [issue_tracker_id]
+        row = self.data_source.get_row(query, arguments)
+        if row:
+            max_last_change_at = row[0]
+        else:
+            self.logger.warning("No max last_change_at in issue")
+        return max_last_change_at

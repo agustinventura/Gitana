@@ -2,11 +2,12 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import re
-from datetime import datetime
 import logging
 import logging.handlers
+import re
 import sys
+from datetime import datetime
+
 sys.path.insert(0, "..//..")
 
 from querier_git import GitQuerier
@@ -149,7 +150,8 @@ class Git2DbReference(object):
                         status = self.querier.get_status_with_diff(stats, diff)
 
                         #insert file modification
-                        self.dao.insert_file_modification(commit_id, file_id, status, stats[0], stats[1], stats[2], patch_content)
+                        self.dao.insert_file_modification(commit_id, file_id, status, stats[0], stats[1], stats[2],
+                                                          patch_content)
 
                         if self.import_type == FULL_IMPORT_TYPE:
                             file_modification_id = self.dao.select_file_modification_id(commit_id, file_id)
@@ -210,7 +212,8 @@ class Git2DbReference(object):
                                 else:
                                     patch_content = None
 
-                                self.dao.insert_file_modification(commit_id, file_id, status, stats[0], stats[1], stats[2], patch_content)
+                                self.dao.insert_file_modification(commit_id, file_id, status, stats[0], stats[1],
+                                                                  stats[2], patch_content)
 
                                 if self.import_type == FULL_IMPORT_TYPE:
                                     file_modification_id = self.dao.select_file_modification_id(commit_id, file_id)
@@ -244,6 +247,6 @@ class Git2DbReference(object):
 
             minutes_and_seconds = divmod((end_time-start_time).total_seconds(), 60)
             self.logger.info("Git2DbReference finished after " + str(minutes_and_seconds[0])
-                         + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
+                             + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
         except Exception, e:
             self.logger.error("Git2DbReference failed", exc_info=True)

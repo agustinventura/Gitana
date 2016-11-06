@@ -6,7 +6,6 @@ import time
 
 
 class TokenUtil():
-
     def is_usuable(self, token):
         try:
             check = token.requests_left > 0

@@ -2,14 +2,13 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import mysql.connector
-from mysql.connector import errorcode
-from datetime import datetime
-import re
-from email.utils import parseaddr
-import sys
 import logging
 import logging.handlers
+import re
+import sys
+from datetime import datetime
+from email.utils import parseaddr
+
 sys.path.insert(0, "..//..//..")
 
 from querier_bugzilla import BugzillaQuerier
@@ -89,7 +88,8 @@ class BugzillaIssue2Db(object):
     def extract_history(self, issue_id, history):
         for event in history:
             try:
-                created_at = self.date_util.get_timestamp(self.querier.get_event_property(event, 'when'), '%Y%m%dT%H:%M:%S')
+                created_at = self.date_util.get_timestamp(self.querier.get_event_property(event, 'when'),
+                                                          '%Y%m%dT%H:%M:%S')
                 creator_email = self.querier.get_event_property(event, 'who')
                 creator_id = self.dao.get_user_id(self.querier.get_user_name(creator_email), creator_email)
 
@@ -131,8 +131,10 @@ class BugzillaIssue2Db(object):
                 position = self.querier.get_comment_property(comment, 'count')
                 author_email = self.querier.get_comment_property(comment, 'author')
                 author_id = self.dao.get_user_id(self.querier.get_user_name(author_email), author_email)
-                created_at = self.date_util.get_timestamp(self.querier.get_comment_property(comment, 'creation_time'), '%Y%m%dT%H:%M:%S')
-                self.dao.insert_issue_comment(own_id, position, self.dao.get_message_type_id("comment"), issue_id, body, None, author_id, created_at)
+                created_at = self.date_util.get_timestamp(self.querier.get_comment_property(comment, 'creation_time'),
+                                                          '%Y%m%dT%H:%M:%S')
+                self.dao.insert_issue_comment(own_id, position, self.dao.get_message_type_id("comment"), issue_id, body,
+                                              None, author_id, created_at)
 
                 attachment_id = self.querier.get_comment_property(comment, 'attachment_id')
                 if attachment_id:
@@ -191,10 +193,12 @@ class BugzillaIssue2Db(object):
         if stored_issue_last_change:
             if last_change_at != stored_issue_last_change:
                 flag_insert_issue_data = True
-                self.dao.update_issue(issue_own_id, self.issue_tracker_id, summary, component, version, hardware, priority, severity, reference_id, last_change_at)
+                self.dao.update_issue(issue_own_id, self.issue_tracker_id, summary, component, version, hardware,
+                                      priority, severity, reference_id, last_change_at)
         else:
             flag_insert_issue_data = True
-            self.dao.insert_issue(issue_own_id, self.issue_tracker_id, summary, component, version, hardware, priority, severity, reference_id, user_id, created_at, last_change_at)
+            self.dao.insert_issue(issue_own_id, self.issue_tracker_id, summary, component, version, hardware, priority,
+                                  severity, reference_id, user_id, created_at, last_change_at)
 
         if flag_insert_issue_data:
             issue_id = self.dao.select_issue_id(issue_own_id, self.issue_tracker_id, self.repo_id)
@@ -244,6 +248,6 @@ class BugzillaIssue2Db(object):
 
             minutes_and_seconds = divmod((end_time-start_time).total_seconds(), 60)
             self.logger.info("BugzillaIssue2Db finished after " + str(minutes_and_seconds[0])
-                           + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
+                             + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
         except Exception, e:
             self.logger.error("BugzillaIssue2Db failed", exc_info=True)

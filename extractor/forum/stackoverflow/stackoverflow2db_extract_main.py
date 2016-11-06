@@ -2,9 +2,10 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-from datetime import datetime
 import multiprocessing
 import sys
+from datetime import datetime
+
 sys.path.insert(0, "..//..//..")
 
 from extractor.util import multiprocessing_util
@@ -14,7 +15,6 @@ from stackoverflow_dao import StackOverflowDao
 
 
 class StackOverflow2DbMain():
-
     def __init__(self, db_name, project_name,
                  type, forum_name, search_query, before_date, recover_import, tokens,
                  config, logger):
@@ -48,7 +48,8 @@ class StackOverflow2DbMain():
 
         pos = 0
         for interval in intervals:
-            topic_extractor = StackOverflowTopic2Db(self.db_name, forum_id, interval, self.tokens[pos], self.config, self.log_path)
+            topic_extractor = StackOverflowTopic2Db(self.db_name, forum_id, interval, self.tokens[pos], self.config,
+                                                    self.log_path)
             queue_extractors.put(topic_extractor)
             pos += 1
 
@@ -68,8 +69,8 @@ class StackOverflow2DbMain():
 
             end_time = datetime.now()
 
-            minutes_and_seconds = divmod((end_time-start_time).total_seconds(), 60)
+            minutes_and_seconds = divmod((end_time - start_time).total_seconds(), 60)
             self.logger.info("StackOverflow2DbMain finished after " + str(minutes_and_seconds[0])
-                         + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
+                             + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
         except:
             self.logger.error("StackOverflow2DbMain failed", exc_info=True)

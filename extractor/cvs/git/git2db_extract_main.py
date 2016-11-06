@@ -2,9 +2,10 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-from datetime import datetime
 import multiprocessing
 import sys
+from datetime import datetime
+
 sys.path.insert(0, "..//..//..")
 
 from querier_git import GitQuerier
@@ -89,7 +90,7 @@ class Git2DbMain():
             repo_id = self.dao.select_repo_id(project_id, self.repo_name)
             self.dao.close_connection()
 
-            #info contribution does not need a connection to the db
+            # info contribution does not need a connection to the db
             self.get_info_contribution(repo_id)
 
             self.dao.restart_connection()

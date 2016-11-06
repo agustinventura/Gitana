@@ -23,7 +23,8 @@ class GithubQuerier:
         self.last_page = -1
         self.current_page = 0
         self.issues_initialized = False
-        self.issue_reference_pattern = re.compile('\s#\d+\s')
+        self.issue_reference_pattern = '\s#\d+\s'
+        self.issue_attachment_pattern = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
 
     def __load_repository(self):
         repository = None
@@ -33,9 +34,9 @@ class GithubQuerier:
             self.logger.error("Error loading repository " + self.repo_name + ": " + e.message)
         return repository
 
-    def load_issues_page(self):
+    def load_issues_page(self, last_date):
         if not self.issues_initialized:
-            self.__load_issues()
+            self.__load_issues(last_date)
 
         if self.current_page <= self.last_page:
             issues_page = self.issues.get_page(self.current_page)
@@ -44,6 +45,9 @@ class GithubQuerier:
             issues_page = None
 
         return issues_page
+
+    def load_issue(self, issue_id):
+        return self.repository.get_issue(issue_id)
 
     def read_user(self, issue):
         user_data = {"login": issue.user.login,
@@ -69,12 +73,11 @@ class GithubQuerier:
         comment_data["created_at"] = self.date_util.get_timestamp(comment.created_at, "%Y-%m-%d %H:%M:%S")
         return comment_data
 
-    def read_issue_reference(self, body):
-        referenced_issue_own_id = None
-        issue_reference = self.issue_reference_pattern.search(body)
-        if issue_reference is not None:
-            referenced_issue_own_id = issue_reference.group()[2:]
-        return referenced_issue_own_id
+    def read_issue_references(self, body):
+        return re.findall(self.issue_reference_pattern, body)
+
+    def read_issue_attachments(self, body):
+        return re.findall(self.issue_attachment_pattern, body)
 
     def read_labels(self, issue):
         return [label.name for label in issue.get_labels() if label.name is not None]
@@ -111,9 +114,12 @@ class GithubQuerier:
             version = issue.milestone.number
         return version
 
-    def __load_issues(self):
+    def __load_issues(self, last_date):
         if self.repository is not None:
-            self.issues = self.__get_all_issues_ascending()
+            if last_date is None:
+                self.issues = self.__get_all_issues_ascending()
+            else:
+                self.issues = self.__get_new_issues_ascending(last_date)
             self.last_page = self.__get_last_page()
             self.current_page = 0
             self.issues_initialized = True
@@ -131,3 +137,6 @@ class GithubQuerier:
     def __get_all_issues_ascending(self):
         return self.repository.get_issues(state="all", direction="asc")
 
+    def __get_new_issues_ascending(self, last_date):
+        return self.repository.get_issues(state="all", direction="asc",
+                                          since=self.date_util.get_timestamp(last_date, "%Y-%m-%d %H:%M:%S"))

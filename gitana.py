@@ -2,48 +2,62 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import mysql.connector
-from mysql.connector import errorcode
-import os
+import glob
 import logging
 import logging.handlers
-import glob
+import os
+import sys
 import uuid
 
-from extractor.db.dbschema import DbSchema
+import mysql.connector
+
 from extractor.cvs.git.git2db_extract_main import Git2DbMain
 from extractor.cvs.git.git2db_update import Git2DbUpdate
-from extractor.issue_tracker.bugzilla.issue2db_extract_main import BugzillaIssue2DbMain
-from extractor.issue_tracker.bugzilla.issue2db_update import BugzillaIssue2DbUpdate
+from extractor.db.dbschema import DbSchema
 from extractor.forum.eclipse.forum2db_extract_main import EclipseForum2DbMain
 from extractor.forum.eclipse.forum2db_update import EclipseForum2DbUpdate
 from extractor.forum.stackoverflow.stackoverflow2db_extract_main import StackOverflow2DbMain
 from extractor.forum.stackoverflow.stackoverflow2db_update import StackOverflow2DbUpdate
 from extractor.instant_messaging.slack.slack2db_extract_main import Slack2DbMain
-from extractor.instant_messaging.slack.slack2db_update import Slack2DbUpdate
+from extractor.issue_tracker.bugzilla.issue2db_extract_main import BugzillaIssue2DbMain
+from extractor.issue_tracker.bugzilla.issue2db_update import BugzillaIssue2DbUpdate
+from extractor.issue_tracker.github.github_importer import GithubImporter
+from extractor.issue_tracker.github.github_updater import GithubUpdater
 
 LOG_FOLDER_PATH = "logs"
 LOG_NAME = "gitana"
 
 
-class Gitana():
+class Gitana:
 
     def __init__(self, config, log_folder_path):
         self.config = config
         self.cnx = mysql.connector.connect(**self.config)
+        self.get_logger(log_folder_path)
 
+    def get_logger(self, log_folder_path):
         if log_folder_path:
-            self.create_log_folder(log_folder_path)
-            self.log_folder_path = log_folder_path
+            self.get_file_logger(log_folder_path)
         else:
-            self.create_log_folder(LOG_FOLDER_PATH)
-            self.log_folder_path = LOG_FOLDER_PATH
+            self.get_console_logger()
 
+    def get_console_logger(self):
+        self.logger = logging.getLogger()
+        self.logger.setLevel(logging.DEBUG)
+
+        ch = logging.StreamHandler(sys.stdout)
+        ch.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        ch.setFormatter(formatter)
+        self.logger.addHandler(ch)
+
+    def get_file_logger(self, log_folder_path):
+        self.create_log_folder(log_folder_path)
+        self.log_folder_path = log_folder_path
         self.log_path = self.log_folder_path + "/" + LOG_NAME + "-" + str(uuid.uuid4())[:5] + ".log"
         self.logger = logging.getLogger(self.log_path)
         fileHandler = logging.FileHandler(self.log_path, mode='w')
         formatter = logging.Formatter("%(asctime)s:%(levelname)s:%(message)s", "%Y-%m-%d %H:%M:%S")
-
         fileHandler.setFormatter(formatter)
         self.logger.setLevel(logging.INFO)
         self.logger.addHandler(fileHandler)
@@ -90,37 +104,43 @@ class Gitana():
                               self.config, self.logger)
         git2db.update()
 
-    def import_bugzilla_tracker_data(self, db_name, project_name, repo_name, issue_tracker_name, url, product, before_date, recover_import, processes):
+    def import_bugzilla_tracker_data(self, db_name, project_name, repo_name, issue_tracker_name, url, product,
+                                     before_date, recover_import, processes):
         self.logger.info("importing bugzilla data")
         issue2db = BugzillaIssue2DbMain(db_name, project_name,
-                                repo_name, "bugzilla", issue_tracker_name, url, product, before_date, recover_import, processes,
-                                self.config, self.logger)
+                                        repo_name, "bugzilla", issue_tracker_name, url, product, before_date,
+                                        recover_import, processes,
+                                        self.config, self.logger)
         issue2db.extract()
 
     def update_bugzilla_tracker_data(self, db_name, project_name, repo_name, issue_tracker_name, product, processes):
         self.logger.info("updating bugzilla data")
         issue2db = BugzillaIssue2DbUpdate(db_name, project_name,
-                                  repo_name, issue_tracker_name, product, processes,
-                                  self.config, self.logger)
+                                          repo_name, issue_tracker_name, product, processes,
+                                          self.config, self.logger)
         issue2db.update()
 
-    def import_eclipse_forum_data(self, db_name, project_name, forum_name, eclipse_forum_url, before_date, recover_import, processes):
+    def import_eclipse_forum_data(self, db_name, project_name, forum_name, eclipse_forum_url, before_date,
+                                  recover_import, processes):
         self.logger.info("importing eclipse forum data")
         forum2db = EclipseForum2DbMain(db_name, project_name,
-                                "eclipse_forum", forum_name, eclipse_forum_url, before_date, recover_import, processes,
-                                self.config, self.logger)
+                                       "eclipse_forum", forum_name, eclipse_forum_url, before_date, recover_import,
+                                       processes,
+                                       self.config, self.logger)
         forum2db.extract()
 
     def update_eclipse_forum_data(self, db_name, project_name, forum_name, processes):
         self.logger.info("importing eclipse forum data")
         forum2db = EclipseForum2DbUpdate(db_name, project_name, forum_name, processes,
-                                  self.config, self.logger)
+                                         self.config, self.logger)
         forum2db.update()
 
-    def import_stackoverflow_data(self, db_name, project_name, forum_name, search_query, before_date, recover_import, tokens):
+    def import_stackoverflow_data(self, db_name, project_name, forum_name, search_query, before_date, recover_import,
+                                  tokens):
         self.logger.info("importing stackoverflow data")
         stackoverflow2db = StackOverflow2DbMain(db_name, project_name,
-                                                "stackoverflow", forum_name, search_query, before_date, recover_import, tokens,
+                                                "stackoverflow", forum_name, search_query, before_date, recover_import,
+                                                tokens,
                                                 self.config, self.logger)
         stackoverflow2db.extract()
 
@@ -139,12 +159,18 @@ class Gitana():
 
     def update_slack_data(self, db_name, project_name, instant_messaging_name, tokens):
         self.logger.info("updating slack data")
-        #TODO
+        # TODO
 
-    def import_github_tracker_data(self, db_name, project_name, repo_name, github_repo_full_name, before_date, recover_import, tokens):
-        #TODO
-        print "here"
+    def import_github_tracker_data(self, db_name, project_name, repo_name, url, github_repo_full_name, access_token,
+                                   recover_import):
+        self.logger.info("importing github data")
+        github_importer = GithubImporter(db_name, project_name, repo_name, url, github_repo_full_name, access_token,
+                                         recover_import,
+                                         self.config, self.logger)
+        github_importer.import_issues()
 
-    def update_github_tracker_data(self, db_name, project_name, repo_name, github_repo_full_name, tokens):
-        #TODO
-        print "here"
+    def update_github_tracker_data(self, db_name, project_name, repo_name, url, github_repo_full_name, access_token):
+        self.logger.info("updating github data")
+        github_updater = GithubUpdater(db_name, project_name, repo_name, url, github_repo_full_name, access_token,
+                                       self.config, self.logger)
+        github_updater.update_issues()

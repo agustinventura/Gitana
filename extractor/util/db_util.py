@@ -3,11 +3,9 @@
 __author__ = 'valerio cosentino'
 
 import mysql.connector
-from mysql.connector import errorcode
 
 
 class DbUtil():
-
     def get_connection(self, config):
         return mysql.connector.connect(**config)
 

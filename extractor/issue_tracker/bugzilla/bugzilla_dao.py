@@ -6,7 +6,6 @@ from extractor.util.db_util import DbUtil
 
 
 class BugzillaDao():
-
     def __init__(self, config, logger):
         self.config = config
         self.logger = logger
@@ -209,19 +208,23 @@ class BugzillaDao():
 
         return found
 
-    def update_issue(self, issue_id, issue_tracker_id, summary, component, version, hardware, priority, severity, reference_id, last_change_at):
+    def update_issue(self, issue_id, issue_tracker_id, summary, component, version, hardware, priority, severity,
+                     reference_id, last_change_at):
         cursor = self.cnx.cursor()
         query = "UPDATE issue SET last_change_at = %s, summary = %s, component = %s, version = %s, hardware = %s, priority = %s, severity = %s, reference_id = %s WHERE own_id = %s AND issue_tracker_id = %s"
-        arguments = [last_change_at, summary, component, version, hardware, priority, severity, reference_id, issue_id, issue_tracker_id]
+        arguments = [last_change_at, summary, component, version, hardware, priority, severity, reference_id, issue_id,
+                     issue_tracker_id]
         cursor.execute(query, arguments)
         self.cnx.commit()
         cursor.close()
 
-    def insert_issue(self, issue_own_id, issue_tracker_id, summary, component, version, hardware, priority, severity, reference_id, user_id, created_at, last_change_at):
+    def insert_issue(self, issue_own_id, issue_tracker_id, summary, component, version, hardware, priority, severity,
+                     reference_id, user_id, created_at, last_change_at):
         cursor = self.cnx.cursor()
         query = "INSERT IGNORE INTO issue " \
                 "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-        arguments = [None, issue_own_id, issue_tracker_id, summary, component, version, hardware, priority, severity, reference_id, user_id, created_at, last_change_at]
+        arguments = [None, issue_own_id, issue_tracker_id, summary, component, version, hardware, priority, severity,
+                     reference_id, user_id, created_at, last_change_at]
         cursor.execute(query, arguments)
         self.cnx.commit()
         cursor.close()
@@ -316,7 +319,7 @@ class BugzillaDao():
             if row:
                 found = row[0]
             else:
-                #sometimes the version is followed by extra information such as alpha, beta, RC, M.
+                # sometimes the version is followed by extra information such as alpha, beta, RC, M.
                 query = "SELECT id FROM reference WHERE name LIKE '" + version + "%' AND repo_id = " + str(repo_id)
                 cursor.execute(query)
                 row = cursor.fetchone()

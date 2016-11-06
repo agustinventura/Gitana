@@ -6,7 +6,6 @@ from extractor.util.db_util import DbUtil
 
 
 class GitDao():
-
     def __init__(self, config, logger):
         self.config = config
         self.logger = logger
@@ -176,7 +175,8 @@ class GitDao():
 
     def delete_line_details(self, file_modification_ids):
         cursor = self.cnx.cursor()
-        query = "DELETE FROM line_detail WHERE file_modification_id IN (" + self.array2string(file_modification_ids) + ")"
+        query = "DELETE FROM line_detail WHERE file_modification_id IN (" + self.array2string(
+            file_modification_ids) + ")"
         cursor.execute(query)
         self.cnx.commit()
         cursor.close()

@@ -50,3 +50,10 @@ class DataSource:
         row = cursor.fetchone()
         cursor.close()
         return row
+
+    def get_rows(self, query, arguments):
+        cursor = self.__get_cursor()
+        cursor.execute(query, arguments)
+        rows = cursor.fetchall()
+        cursor.close()
+        return rows

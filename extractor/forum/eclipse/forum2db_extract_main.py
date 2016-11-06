@@ -2,9 +2,10 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-from datetime import datetime
 import multiprocessing
 import sys
+from datetime import datetime
+
 sys.path.insert(0, "..//..//..")
 
 from querier_eclipse_forum import EclipseForumQuerier
@@ -59,7 +60,8 @@ class EclipseForum2DbMain():
         else:
             if self.before_date:
                 topic_created_at = self.querier.get_topic_created_at(topic)
-                if self.date_util.get_timestamp(topic_created_at, "%a, %d %B %Y") <= self.date_util.get_timestamp(self.before_date, "%Y-%m-%d"):
+                if self.date_util.get_timestamp(topic_created_at, "%a, %d %B %Y") <= self.date_util.get_timestamp(
+                        self.before_date, "%Y-%m-%d"):
                     self.dao.insert_topic(own_id, forum_id, title, views, last_changed_at)
             else:
                 self.dao.insert_topic(own_id, forum_id, title, views, last_changed_at)
@@ -118,6 +120,6 @@ class EclipseForum2DbMain():
 
             minutes_and_seconds = divmod((end_time-start_time).total_seconds(), 60)
             self.logger.info("EclipseForum2DbMain finished after " + str(minutes_and_seconds[0])
-                         + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
+                             + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
         except:
             self.logger.error("EclipseForum2DbMain failed", exc_info=True)

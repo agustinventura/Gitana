@@ -6,7 +6,6 @@ from extractor.util.db_util import DbUtil
 
 
 class StackOverflowDao():
-
     def __init__(self, config, logger):
         self.config = config
         self.logger = logger
@@ -86,7 +85,8 @@ class StackOverflowDao():
             cursor.execute(query, arguments)
             self.cnx.commit()
         except:
-            self.logger.warning("message " + str(own_id) + ") for topic id: " + str(topic_id) + " not inserted", exc_info=True)
+            self.logger.warning("message " + str(own_id) + ") for topic id: " + str(topic_id) + " not inserted",
+                                exc_info=True)
 
     def insert_topic(self, own_id, forum_id, name, votes, views, created_at, last_changed_at):
         try:
@@ -109,7 +109,8 @@ class StackOverflowDao():
 
             return found
         except Exception, e:
-            self.logger.warning("topic " + str(own_id) + ") for forum id: " + str(forum_id) + " not inserted", exc_info=True)
+            self.logger.warning("topic " + str(own_id) + ") for forum id: " + str(forum_id) + " not inserted",
+                                exc_info=True)
 
     def insert_message_dependency(self, source_message_id, target_message_id):
         cursor = self.cnx.cursor()

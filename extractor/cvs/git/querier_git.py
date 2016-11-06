@@ -2,12 +2,14 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-from git import *
 import re
-from datetime import datetime
 import string
-from extractor.util.date_util import DateUtil
 import time
+from datetime import datetime
+
+from git import *
+
+from extractor.util.date_util import DateUtil
 
 
 class GitQuerier():
@@ -199,10 +201,10 @@ class GitQuerier():
 
             if not flag:
                 try:
-                    #sometimes the library does not set the renamed value to True even if the file is actually renamed
+                    # sometimes the library does not set the renamed value to True even if the file is actually renamed
                     if (not diff.a_blob) and (not diff.b_blob):
                         if re.match(r"^(.*)\nrename from(.*)\nrename to(.*)$", diff.diff, re.M):
-                           flag = True
+                            flag = True
                 except:
                     flag = False
         return flag
@@ -256,13 +258,15 @@ class GitQuerier():
             elif prop == "committed_date":
                 found = commit.committed_date
         except:
-            #ugly but effective. GitPython may fail in retrieving properties with large content. Waiting some seconds seems to fix the problem
+            # ugly but effective. GitPython may fail in retrieving properties with large content. Waiting some seconds seems to fix the problem
             try:
                 time.sleep(5)
                 found = self.get_commit_property(commit, prop)
             except:
                 found = None
-                self.logger.error("something went wrong when trying to retrieve the attribute " + prop + " from the commit " + str(commit.hexsha))
+                self.logger.error(
+                    "something went wrong when trying to retrieve the attribute " + prop + " from the commit " + str(
+                        commit.hexsha))
 
         return found
 

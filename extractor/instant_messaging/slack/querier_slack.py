@@ -2,9 +2,11 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import sys
 import re
+import sys
+
 from slacker import Slacker
+
 sys.path.insert(0, "..//..//..")
 
 from extractor.util.token_util import TokenUtil
@@ -12,7 +14,6 @@ from extractor.util.date_util import DateUtil
 
 
 class SlackQuerier():
-
     def __init__(self, token, logger):
         self.token = token
         self.logger = logger
@@ -227,5 +228,3 @@ class SlackQuerier():
 
     def get_message_content(self, message):
         return message.get('text')
-
-

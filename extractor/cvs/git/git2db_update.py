@@ -6,8 +6,6 @@ import multiprocessing
 import sys
 from datetime import datetime
 
-import mysql.connector
-
 sys.path.insert(0, "..//..//..")
 
 from querier_git import GitQuerier
@@ -146,6 +144,6 @@ class Git2DbUpdate():
             end_time = datetime.now()
             minutes_and_seconds = divmod((end_time-start_time).total_seconds(), 60)
             self.logger.info("Git2DbUpdate finished after " + str(minutes_and_seconds[0])
-                         + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
+                             + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
         except:
             self.logger.error("Git2DbUpdate failed", exc_info=True)

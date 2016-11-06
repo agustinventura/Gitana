@@ -2,17 +2,18 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import networkx as nx
-import mysql.connector
-from mysql.connector import errorcode
+import errno
+import json
 import logging
 import logging.handlers
 import os
-from datetime import datetime
 import sys
-import json
 import uuid
-import errno
+from datetime import datetime
+
+import mysql.connector
+import networkx as nx
+
 sys.path.insert(0, "..")
 
 from exporter import resources
@@ -114,7 +115,8 @@ class GexfExporter():
                 graph.node[node_id]['label'] = node_label
                 graph.node[node_id]['viz'] = {'color': {'r': r, 'g': g, 'b': b, 'a': 0},
                                               'size': node_size,
-                                              'position': {'x': randint(0, 255), 'y': randint(0, 255), 'z': randint(0, 255)}}
+                                              'position': {'x': randint(0, 255), 'y': randint(0, 255),
+                                                           'z': randint(0, 255)}}
             except:
                 self.logger.warning(
                     "GexfExporter: problem when inserting node(id, label, size): (" + str(node_id) + "," + str(node_label) + ")")

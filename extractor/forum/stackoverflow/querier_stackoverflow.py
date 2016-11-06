@@ -2,10 +2,12 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import stackexchange
-import sys
 import re
+import sys
 from BeautifulSoup import BeautifulSoup
+
+import stackexchange
+
 sys.path.insert(0, "..//..//..")
 
 from extractor.util.token_util import TokenUtil
@@ -13,13 +15,12 @@ from extractor.util.date_util import DateUtil
 
 
 class StackOverflowQuerier():
-
     def __init__(self, token, logger):
         self.token = token
         self.logger = logger
         self.token_util = TokenUtil()
         self.date_util = DateUtil()
-        self.so = stackexchange.Site(stackexchange.StackOverflow, app_key = self.token)
+        self.so = stackexchange.Site(stackexchange.StackOverflow, app_key=self.token)
 
     def get_topic_ids(self, search_query, before_date):
         questions = []
@@ -28,7 +29,8 @@ class StackOverflowQuerier():
             questions.append(question)
 
         if before_date:
-            questions = [q for q in questions if q.creation_date <= self.date_util.get_timestamp(before_date, "%Y-%m-%d")]
+            questions = [q for q in questions if
+                         q.creation_date <= self.date_util.get_timestamp(before_date, "%Y-%m-%d")]
 
         return [question.id for question in questions]
 
@@ -126,10 +128,3 @@ class StackOverflowQuerier():
 
     def generate_attachment_id(self, message_id, pos):
         return str(message_id) + str(pos)
-
-
-
-
-
-
-

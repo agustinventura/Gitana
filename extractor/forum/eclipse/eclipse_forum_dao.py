@@ -6,7 +6,6 @@ from extractor.util.db_util import DbUtil
 
 
 class EclipseForumDao():
-
     def __init__(self, config, logger):
         self.config = config
         self.logger = logger
@@ -115,7 +114,8 @@ class EclipseForumDao():
 
             return found
         except:
-            self.logger.warning("message " + str(own_id) + ") for topic id: " + str(topic_id) + " not inserted", exc_info=True)
+            self.logger.warning("message " + str(own_id) + ") for topic id: " + str(topic_id) + " not inserted",
+                                exc_info=True)
 
     def select_forum_id(self, forum_name, project_id):
         cursor = self.cnx.cursor()
@@ -210,7 +210,8 @@ class EclipseForumDao():
             self.cnx.commit()
             cursor.close()
         except Exception, e:
-            self.logger.warning("topic with title " + title.lower() + " not inserted for forum id: " + str(forum_id), exc_info=True)
+            self.logger.warning("topic with title " + title.lower() + " not inserted for forum id: " + str(forum_id),
+                                exc_info=True)
 
     def update_topic_info(self, topic_id, forum_id, views, last_changed_at):
         cursor = self.cnx.cursor()

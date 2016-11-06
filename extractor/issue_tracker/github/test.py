@@ -4,6 +4,7 @@ from github import Github
 
 TOKEN = 'YOUR-TOKEN'
 
+
 def get_issue_events(repo):
     page_count = 1
     last_page = int(repo.get_issues(state="all", direction="asc")._getLastPageUrl().split("page=")[-1])
@@ -48,17 +49,17 @@ def get_issue_events(repo):
                     if event == 'subscribed':
                         print login + " subscribed to the issue"
 
-                    #other events to map
+                        # other events to map
 
         page_count += 1
 
 
 def main():
-
     g = Github(TOKEN)
     repo = g.get_repo("gabrielecirulli/2048")
 
     get_issue_events(repo)
+
 
 if __name__ == "__main__":
     main()

@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-from datetime import datetime
-import time
-import sys
 import logging
 import logging.handlers
+import sys
+from datetime import datetime
+
 sys.path.insert(0, "..//..//..")
 
 from querier_stackoverflow import StackOverflowQuerier
@@ -14,7 +14,6 @@ from stackoverflow_dao import StackOverflowDao
 
 
 class StackOverflowTopic2Db(object):
-
     def __init__(self, db_name, forum_id, interval, token,
                  config, log_path):
         self.log_path = log_path
@@ -29,7 +28,8 @@ class StackOverflowTopic2Db(object):
     def __call__(self):
         LOG_FILENAME = self.log_path + "-topic2db"
         self.logger = logging.getLogger(LOG_FILENAME)
-        fileHandler = logging.FileHandler(LOG_FILENAME + "-" + str(self.interval[0]) + "-" + str(self.interval[-1]) + ".log", mode='w')
+        fileHandler = logging.FileHandler(
+            LOG_FILENAME + "-" + str(self.interval[0]) + "-" + str(self.interval[-1]) + ".log", mode='w')
         formatter = logging.Formatter("%(asctime)s:%(levelname)s:%(message)s", "%Y-%m-%d %H:%M:%S")
 
         fileHandler.setFormatter(formatter)
@@ -56,7 +56,8 @@ class StackOverflowTopic2Db(object):
             else:
                 message_type = "answer"
 
-            self.dao.insert_message(own_id, self.pos, self.dao.get_message_type_id(message_type), topic_id, self.querier.remove_html_tags(body), votes, author_id, created_at)
+            self.dao.insert_message(own_id, self.pos, self.dao.get_message_type_id(message_type), topic_id,
+                                    self.querier.remove_html_tags(body), votes, author_id, created_at)
             answer_message_id = self.dao.select_message_id(own_id, topic_id)
             self.dao.insert_message_dependency(message_id, answer_message_id)
             self.extract_attachments(body, answer_message_id)
@@ -71,7 +72,8 @@ class StackOverflowTopic2Db(object):
             author_id = self.dao.get_user_id(self.querier.get_container_author(c))
             created_at = self.querier.get_container_created_at(c)
             votes = self.querier.get_container_votes(c)
-            self.dao.insert_message(own_id, self.pos, self.dao.get_message_type_id("comment"), topic_id, self.querier.remove_html_tags(body), votes, author_id, created_at)
+            self.dao.insert_message(own_id, self.pos, self.dao.get_message_type_id("comment"), topic_id,
+                                    self.querier.remove_html_tags(body), votes, author_id, created_at)
             comment_message_id = self.dao.select_message_id(own_id, topic_id)
             self.dao.insert_message_dependency(message_id, comment_message_id)
             self.extract_attachments(body, comment_message_id)
@@ -106,7 +108,8 @@ class StackOverflowTopic2Db(object):
 
             self.pos = 0
             body = self.querier.get_container_body(topic)
-            self.dao.insert_message(own_id, self.pos, self.dao.get_message_type_id("question"), topic_id, self.querier.remove_html_tags(body),
+            self.dao.insert_message(own_id, self.pos, self.dao.get_message_type_id("question"), topic_id,
+                                    self.querier.remove_html_tags(body),
                                     votes, author_id, created_at)
             message_id = self.dao.select_message_id(own_id, topic_id)
             self.extract_attachments(body, message_id)
@@ -126,8 +129,8 @@ class StackOverflowTopic2Db(object):
 
             end_time = datetime.now()
 
-            minutes_and_seconds = divmod((end_time-start_time).total_seconds(), 60)
+            minutes_and_seconds = divmod((end_time - start_time).total_seconds(), 60)
             self.logger.info("StackOverflowTopic2Db finished after " + str(minutes_and_seconds[0])
-                           + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
+                             + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
         except Exception, e:
             self.logger.error("StackOverflowTopic2Db failed", exc_info=True)

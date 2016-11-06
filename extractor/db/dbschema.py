@@ -422,8 +422,8 @@ class DbSchema():
                                                                "(NULL, 'comment'), " \
                                                                "(NULL, 'accepted_answer'), " \
                                                                "(NULL, 'reply'), " \
-                                                               "(NULL, 'file_upload'), " \
-                                                               "(NULL, 'info');"
+                               "(NULL, 'file_upload'), " \
+                               "(NULL, 'info');"
 
         create_table_attachment = "CREATE TABLE attachment ( " \
                                   "id int(20) AUTO_INCREMENT PRIMARY KEY, " \
@@ -647,9 +647,9 @@ class DbSchema():
                                        ") ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;"
 
         insert_issue_dependency_type = "INSERT INTO issue_dependency_type VALUES (NULL, 'block'), " \
-                                                                                "(NULL, 'depends'), " \
-                                                                                "(NULL, 'related'), " \
-                                                                                "(NULL, 'duplicated');"
+                                       "(NULL, 'depends'), " \
+                                       "(NULL, 'related'), " \
+                                       "(NULL, 'duplicated');"
 
         cursor.execute(create_table_issue_tracker)
         cursor.execute(create_table_issue)
