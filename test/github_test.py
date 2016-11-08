@@ -23,6 +23,10 @@ def process_halflife(g):
                                  "ValveSoftware/halflife", "493852caff7a314e894a4ea35002652de127b910")
 
 
+def update_halflife(g):
+    g.update_github_tracker_data("db_halflife", "halflife", "halflife", "https://github.com/ValveSoftware/halflife",
+                                 "ValveSoftware/halflife", "493852caff7a314e894a4ea35002652de127b910")
+
 def process_pruebagit(g):
     g.init_db("db_prueba")
     g.create_project("db_prueba", "prueba")
@@ -42,14 +46,16 @@ def update_2048(g):
                                  "gabrielecirulli/2048", "493852caff7a314e894a4ea35002652de127b910")
 
 
+
 def main():
     g = Gitana(CONFIG, None)
-    #process_pruebagit(g)
-    update_pruebagit(g)
+    process_pruebagit(g)
+    # update_pruebagit(g)
     #process_2048(g)
     # recover_2048(g)
-    # update_2048(g)
+    #update_2048(g)
     #process_halflife(g)
+    #update_halflife(g)
 
 def process_2048(g):
     g.init_db("db_2048")

@@ -8,11 +8,16 @@ sys.path.insert(0, "..\\..")
 
 
 class IssueWriter:
-    def __init__(self, github_querier, github_dao, issue_tracker_id, logger):
+    def __init__(self, github_querier, github_dao, issue_tracker_id, interval, logger):
         self.github_querier = github_querier
         self.github_dao = github_dao
         self.issue_tracker_id = issue_tracker_id
         self.logger = logger
+        self.interval = interval
+
+    def __call__(self):
+        for issue in self.interval:
+            self.write(issue)
 
     def write(self, issue):
         user_data = self.github_querier.read_user(issue)
