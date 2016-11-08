@@ -119,10 +119,20 @@ class GithubDAO:
         label_id = self.__insert_label(label_name)
         self.__insert_issue_label(issue_id, label_id)
 
+    def delete_issue_labels(self, issue_id):
+        query = "DELETE FROM issue_labelled WHERE issue_id = %s"
+        arguments = [issue_id]
+        self.data_source.execute_and_commit(query, arguments)
+
     def insert_issue_comment(self, issue_id, user_id, comment_id, comment_pos, comment_body, comment_created_at):
         query = "INSERT IGNORE INTO message(id, own_id, pos, body, created_at, author_id, issue_id) " \
                 "VALUES (%s, %s, %s, %s, %s, %s, %s)"
         arguments = [None, comment_id, comment_pos, comment_body, comment_created_at, user_id, issue_id]
+        self.data_source.execute_and_commit(query, arguments)
+
+    def delete_issue_comments(self, issue_id):
+        query = "DELETE FROM message WHERE issue_id = %s"
+        arguments = [issue_id]
         self.data_source.execute_and_commit(query, arguments)
 
     def insert_issue_event(self, issue_id, event_type_id, detail, creator_id, created_at, target_user_id):
@@ -146,14 +156,29 @@ class GithubDAO:
         arguments = [issue_id, user_id]
         self.data_source.execute_and_commit(query, arguments)
 
+    def delete_issue_assignee(self, issue_id):
+        query = "DELETE FROM issue_assignee WHERE issue_id = %s"
+        arguments = [issue_id]
+        self.data_source.execute_and_commit(query, arguments)
+
     def insert_issue_reference(self, issue_id, referenced_issue_id):
         query = "INSERT IGNORE INTO issue_dependency(issue_source_id, issue_target_id, type_id) values (%s, %s, %s)"
         arguments = [issue_id, referenced_issue_id, 3]
         self.data_source.execute_and_commit(query, arguments)
 
+    def delete_issue_reference(self, issue_id):
+        query = "DELETE FROM issue_dependency WHERE issue_source_id = %s"
+        arguments = [issue_id]
+        self.data_source.execute_and_commit(query, arguments)
+
     def insert_issue_attachment(self, issue_id, attachment_url):
         query = "INSERT IGNORE INTO attachment(id, message_id, url) values (%s, %s, %s)"
         arguments = [None, issue_id, attachment_url]
+        self.data_source.execute_and_commit(query, arguments)
+
+    def delete_issue_attachment(self, issue_id):
+        query = "DELETE FROM attachment WHERE message_id = %s"
+        arguments = [issue_id]
         self.data_source.execute_and_commit(query, arguments)
 
     def __insert_label(self, label_name):

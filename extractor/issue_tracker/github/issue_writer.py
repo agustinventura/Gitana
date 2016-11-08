@@ -27,6 +27,10 @@ class IssueWriter:
         user_data = self.github_querier.read_user(issue)
         user_id = self.__write_user(user_data)
         issue_id = self.__update_issue(issue, user_id)
+        self.__update_labels(issue, issue_id)
+        self.__update_comments(issue, issue_id)
+        self.__write_events(issue, issue_id)
+        self.__update_assignees(issue, issue_id)
 
     def __write_user(self, user_data):
         user_id = self.github_dao.get_user_id(user_data["login"], user_data["email"])
@@ -45,12 +49,16 @@ class IssueWriter:
         issue_id = self.github_dao.get_issue_id_by_own_id(issue_data["own_id"], self.issue_tracker_id)
         self.github_dao.update_issue(issue_id, user_id, issue_data["summary"], issue_data["version"],
                                      issue_data["created_at"], issue_data["updated_at"])
-        # self.__write_issue_body(issue_id, user_id, issue_data)
+        self.__update_issue_body(issue_id, user_id, issue_data)
         return issue_id
 
     def __write_labels(self, issue, issue_id):
         for label in self.github_querier.read_labels(issue):
             self.github_dao.insert_issue_label(issue_id, label)
+
+    def __update_labels(self, issue, issue_id):
+        self.github_dao.delete_issue_labels(issue_id)
+        self.__write_labels(issue, issue_id)
 
     def __write_comments(self, issue, issue_id):
         comments = self.github_querier.read_comments(issue);
@@ -61,6 +69,10 @@ class IssueWriter:
             self.github_dao.insert_issue_comment(issue_id, comment_data["user"], comment_data["id"], comment_pos + 1,
                                                  comment_data["body"], comment_data["created_at"])
             self.__write_issue_reference(comment_data["body"], issue_id)
+
+    def __update_comments(self, issue, issue_id):
+        self.github_dao.delete_issue_comments(issue_id)
+        self.__write_comments(issue, issue_id)
 
     def __write_events(self, issue, issue_id):
         for event in self.github_querier.read_events(issue):
@@ -154,11 +166,25 @@ class IssueWriter:
             assignee_id = self.github_dao.get_user_id(issue.assignee.login, issue.assignee.email)
             self.github_dao.insert_issue_assignee(issue_id, assignee_id)
 
+    def __update_assignees(self, issue, issue_id):
+        self.github_dao.delete_issue_assignee(issue_id)
+        self.__write_assignees(issue, issue_id)
+
     def __write_issue_body(self, issue_id, user_id, issue_data):
         self.github_dao.insert_issue_comment(issue_id, user_id, 0, 0, issue_data["body"],
                                              issue_data["created_at"])
         if issue_data["body"] is not None:
             self.__write_issue_reference(issue_data["body"], issue_id)
+            self.__write_issue_attachment(issue_data["body"], issue_id)
+
+    def __update_issue_body(self, issue_id, user_id, issue_data):
+        self.github_dao.delete_issue_comments(issue_id)
+        self.github_dao.insert_issue_comment(issue_id, user_id, 0, 0, issue_data["body"],
+                                             issue_data["created_at"])
+        if issue_data["body"] is not None:
+            self.github_dao.delete_issue_reference(issue_id);
+            self.__write_issue_reference(issue_data["body"], issue_id)
+            self.github_dao.delete_issue_attachment(issue_id)
             self.__write_issue_attachment(issue_data["body"], issue_id)
 
     def __write_issue_reference(self, body, issue_id):
