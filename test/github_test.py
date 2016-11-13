@@ -47,8 +47,8 @@ def update_2048(g):
 
 def main():
     g = Gitana(CONFIG, None)
-    # process_pruebagit(g)
-    update_pruebagit(g)
+    process_pruebagit(g)
+    # update_pruebagit(g)
     #process_2048(g)
     # recover_2048(g)
     #update_2048(g)

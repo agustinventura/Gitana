@@ -52,6 +52,6 @@ class Consumer(multiprocessing.Process):
 
             answer = next_task()
             self.task_queue.task_done()
-            #self.result_queue.put(answer)
+            # self.result_queue.put(answer)
 
         return

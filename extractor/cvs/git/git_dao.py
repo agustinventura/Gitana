@@ -6,7 +6,6 @@ from extractor.util.db_util import DbUtil
 
 
 class GitDao():
-
     def __init__(self, config, logger):
         self.config = config
         self.logger = logger

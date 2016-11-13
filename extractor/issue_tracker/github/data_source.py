@@ -15,7 +15,7 @@ class DataSource:
         self.__connect()
 
     def __del__(self):
-        logging.info("DataSource destroyed")
+        logging.debug("DataSource destroyed")
         self.close_connection()
 
     def __connect(self):

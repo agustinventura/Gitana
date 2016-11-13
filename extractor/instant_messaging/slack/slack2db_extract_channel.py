@@ -157,7 +157,7 @@ class SlackChannel2Db(object):
             else:
                 if not self.querier.is_bot_message(message):
                     self.extract_message(message, channel_id, type, pos)
-                #TODO deal with bot messages
+                # TODO deal with bot messages
                 pos += 1
 
     def extract(self):

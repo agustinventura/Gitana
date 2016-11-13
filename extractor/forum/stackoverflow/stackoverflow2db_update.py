@@ -46,7 +46,8 @@ class StackOverflow2DbUpdate():
             multiprocessing_util.start_consumers(len(self.tokens), queue_extractors, results)
 
             for i in range(len(intervals)):
-                topic_extractor = StackOverflowTopic2Db(self.db_name, forum_id, intervals[i], self.tokens[i], self.config, self.log_path)
+                topic_extractor = StackOverflowTopic2Db(self.db_name, forum_id, intervals[i], self.tokens[i],
+                                                        self.config, self.log_path)
                 queue_extractors.put(topic_extractor)
 
             # Add end-of-queue markers

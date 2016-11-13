@@ -48,7 +48,7 @@ class GithubUpdater:
         self.__write_issue_references(issue_tracker_id)
 
     def __write_issues(self, issues, issue_tracker_id):
-        intervals = self.__divide_elements(issues)
+        intervals = multiprocessing_util.get_tasks_intervals(issues, self.processes)
         queue_intervals = multiprocessing.JoinableQueue()
         results = multiprocessing.Queue()
         # Start consumers
@@ -63,21 +63,9 @@ class GithubUpdater:
         # Wait for all of the tasks to finish
         queue_intervals.join()
 
-    def __divide_elements(self, elements):
-        issues_length = len(elements)
-        if issues_length < self.processes:
-            return [elements]
-        else:
-            sublist_size = issues_length / self.processes
-            issues_by_process = []
-            for i in range(0, issues_length, sublist_size):
-                issue_range = elements[i:i + sublist_size]
-                issues_by_process.append(issue_range)
-            return issues_by_process
-
     def __write_issue_references(self, issue_tracker_id):
         comments = self.github_dao.get_issue_comments(issue_tracker_id)
-        intervals = self.__divide_elements(comments)
+        intervals = multiprocessing_util.get_tasks_intervals(comments, self.processes)
         queue_intervals = multiprocessing.JoinableQueue()
         results = multiprocessing.Queue()
         # Start consumers

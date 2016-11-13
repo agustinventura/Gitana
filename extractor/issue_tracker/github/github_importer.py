@@ -29,13 +29,14 @@ class GithubImporter:
         config.update({'database': db_name})
         self.config = config
         self.github_reader = GithubQuerier(self.github_repo_name, access_token)
-        self.github_dao = GithubDAO(config)
+        self.github_dao = None
         self.recover_import = recover_import
         self.processes = GithubImporter.NUM_PROCESSES
         self.access_token = access_token
 
     def import_issues(self):
         # 1) Init database
+        self.github_dao = GithubDAO(self.config)
         logging.info("Initializing issues database")
         self.repo_id = self.github_dao.get_repo_id(self.project_name, self.repo_name)
         issue_tracker_id = self.github_dao.get_issue_tracker_id(self.repo_id, self.url, self.type)
@@ -48,6 +49,8 @@ class GithubImporter:
             # 2.b) Read only modified issues since last date in database
             logging.info("Recovering import")
             issues = self.read_new_issues(issue_tracker_id)
+        self.github_dao.close()
+        self.github_dao = None
         # 3) Write the issues
         logging.info("Writing issues")
         self.__write_issues(issues, issue_tracker_id)
@@ -82,7 +85,7 @@ class GithubImporter:
 
     def __write_issues(self, issues, issue_tracker_id):
         logging.info("Writing issues using " + str(self.processes) + " threads")
-        intervals = self.__divide_elements(issues)
+        intervals = multiprocessing_util.get_tasks_intervals(issues, self.processes)
         queue_intervals = multiprocessing.JoinableQueue()
         results = multiprocessing.Queue()
         # Start consumers
@@ -92,29 +95,16 @@ class GithubImporter:
             github_reader = GithubQuerier(self.github_repo_name, self.access_token)
             issue_writer = IssueWriter(github_reader, issue_tracker_id, interval, self.config, False)
             queue_intervals.put(issue_writer)
-
         # Add end-of-queue markers
         multiprocessing_util.add_poison_pills(self.processes, queue_intervals)
         # Wait for all of the tasks to finish
         logging.info("Waiting for writers to finish")
         queue_intervals.join()
 
-    def __divide_elements(self, elements):
-        elements_length = len(elements)
-        if elements_length < self.processes:
-            return [elements]
-        else:
-            sublist_size = elements_length / self.processes
-            issues_by_process = []
-            for i in range(0, elements_length, sublist_size):
-                issue_range = elements[i:i + sublist_size]
-                issues_by_process.append(issue_range)
-            return issues_by_process
-
     def __write_issue_references(self, issue_tracker_id):
         self.github_dao = GithubDAO(self.config)
         comments = self.github_dao.get_issue_comments(issue_tracker_id)
-        intervals = self.__divide_elements(comments)
+        intervals = multiprocessing_util.get_tasks_intervals(comments, self.processes)
         queue_intervals = multiprocessing.JoinableQueue()
         results = multiprocessing.Queue()
         # Start consumers
@@ -123,7 +113,6 @@ class GithubImporter:
             github_reader = GithubQuerier(self.github_repo_name, self.access_token)
             reference_writer = ReferenceWriter(issue_tracker_id, interval, self.config, github_reader)
             queue_intervals.put(reference_writer)
-
         # Add end-of-queue markers
         multiprocessing_util.add_poison_pills(self.processes, queue_intervals)
         # Wait for all of the tasks to finish
