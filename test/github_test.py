@@ -27,46 +27,49 @@ def update_halflife(g):
     g.update_github_tracker_data("db_halflife", "halflife", "halflife", "https://github.com/ValveSoftware/halflife",
                                  "ValveSoftware/halflife", "493852caff7a314e894a4ea35002652de127b910")
 
+
 def process_pruebagit(g):
     g.init_db("db_prueba")
     g.create_project("db_prueba", "prueba")
     g.import_git_data("db_prueba", "prueba", "prueba", "/home/agustin/Development/Python/Projects/PruebaGit",
-                      None, False, None, None)
+                      None, False, None, 3)
     g.import_github_tracker_data("db_prueba", "prueba", "prueba", "https://github.com/agustinventura/PruebaGit",
-                                 "agustinventura/PruebaGit", "493852caff7a314e894a4ea35002652de127b910", False)
+                                 "agustinventura/PruebaGit", "493852caff7a314e894a4ea35002652de127b910", False, 3)
 
 
 def update_pruebagit(g):
     g.update_github_tracker_data("db_prueba", "prueba", "prueba", "https://github.com/agustinventura/PruebaGit",
-                                 "agustinventura/PruebaGit", "493852caff7a314e894a4ea35002652de127b910")
+                                 "agustinventura/PruebaGit", "493852caff7a314e894a4ea35002652de127b910", 3)
 
-
-def update_2048(g):
-    g.update_github_tracker_data("db_2048", "2048", "2048", "https://github.com/gabrielecirulli/2048",
-                                 "gabrielecirulli/2048", "493852caff7a314e894a4ea35002652de127b910")
-
-def main():
-    g = Gitana(CONFIG, None)
-    process_pruebagit(g)
-    # update_pruebagit(g)
-    #process_2048(g)
-    # recover_2048(g)
-    #update_2048(g)
-    #process_halflife(g)
-    #update_halflife(g)
 
 def process_2048(g):
     g.init_db("db_2048")
     g.create_project("db_2048", "2048")
     g.import_git_data("db_2048", "2048", "2048", "/home/agustin/Development/Python/Projects/2048",
-                      None, False, None, None)
+                      None, False, None, 5)
     g.import_github_tracker_data("db_2048", "2048", "2048", "https://github.com/gabrielecirulli/2048",
-                                 "gabrielecirulli/2048", "493852caff7a314e894a4ea35002652de127b910", False)
+                                 "gabrielecirulli/2048", "493852caff7a314e894a4ea35002652de127b910", False, 5)
 
 
 def recover_2048(g):
     g.import_github_tracker_data("db_2048", "2048", "2048", "https://github.com/gabrielecirulli/2048",
-                                 "gabrielecirulli/2048", "493852caff7a314e894a4ea35002652de127b910", True)
+                                 "gabrielecirulli/2048", "493852caff7a314e894a4ea35002652de127b910", True, 5)
+
+
+def update_2048(g):
+    g.update_github_tracker_data("db_2048", "2048", "2048", "https://github.com/gabrielecirulli/2048",
+                                 "gabrielecirulli/2048", "493852caff7a314e894a4ea35002652de127b910", 5)
+
+
+def main():
+    g = Gitana(CONFIG, None)
+    # process_pruebagit(g)
+    # update_pruebagit(g)
+    process_2048(g)
+    # recover_2048(g)
+    #update_2048(g)
+    #process_halflife(g)
+    #update_halflife(g)
 
 if __name__ == "__main__":
     main()

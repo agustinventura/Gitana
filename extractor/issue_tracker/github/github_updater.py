@@ -18,7 +18,7 @@ from extractor.util import multiprocessing_util
 class GithubUpdater:
     NUM_PROCESSES = 5
 
-    def __init__(self, db_name, project_name, repo_name, url, github_repo_name, access_token, config):
+    def __init__(self, db_name, project_name, repo_name, url, github_repo_name, access_token, processes, config):
         self.type = "github"
         self.project_name = project_name
         self.db_name = db_name
@@ -30,7 +30,10 @@ class GithubUpdater:
         self.config = config
         self.github_reader = GithubQuerier(self.github_repo_name, access_token)
         self.github_dao = GithubDAO(config)
-        self.processes = GithubUpdater.NUM_PROCESSES
+        if processes is None:
+            self.processes = GithubUpdater.NUM_PROCESSES
+        else:
+            self.processes = processes
         self.access_token = access_token
 
     def update_issues(self):

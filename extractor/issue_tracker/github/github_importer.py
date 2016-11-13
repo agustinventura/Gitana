@@ -18,7 +18,8 @@ from extractor.util import multiprocessing_util
 class GithubImporter:
     NUM_PROCESSES = 5
 
-    def __init__(self, db_name, project_name, repo_name, url, github_repo_name, access_token, recover_import, config):
+    def __init__(self, db_name, project_name, repo_name, url, github_repo_name, access_token, recover_import, processes,
+                 config):
         self.type = "github"
         self.url = url
         self.project_name = project_name
@@ -31,7 +32,10 @@ class GithubImporter:
         self.github_reader = GithubQuerier(self.github_repo_name, access_token)
         self.github_dao = None
         self.recover_import = recover_import
-        self.processes = GithubImporter.NUM_PROCESSES
+        if processes is None:
+            self.processes = GithubImporter.NUM_PROCESSES
+        else:
+            self.processes = processes
         self.access_token = access_token
 
     def import_issues(self):

@@ -162,15 +162,15 @@ class Gitana:
         # TODO
 
     def import_github_tracker_data(self, db_name, project_name, repo_name, url, github_repo_full_name, access_token,
-                                   recover_import):
+                                   recover_import, processes):
         logging.info("importing github data")
         github_importer = GithubImporter(db_name, project_name, repo_name, url, github_repo_full_name, access_token,
-                                         recover_import,
-                                         self.config)
+                                         recover_import, processes, self.config)
         github_importer.import_issues()
 
-    def update_github_tracker_data(self, db_name, project_name, repo_name, url, github_repo_full_name, access_token):
+    def update_github_tracker_data(self, db_name, project_name, repo_name, url, github_repo_full_name, access_token,
+                                   processes):
         logging.info("updating github data")
         github_updater = GithubUpdater(db_name, project_name, repo_name, url, github_repo_full_name, access_token,
-                                       self.config)
+                                       processes, self.config)
         github_updater.update_issues()
