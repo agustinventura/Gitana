@@ -2,20 +2,23 @@
 # -*- coding: utf-8 -*-
 __author__ = 'agustin ventura'
 
+import logging
+
 from data_source import DataSource
 from extractor.util.db_util import DbUtil
 
 
 class GithubDAO:
-    def __init__(self, config, logger):
+    def __init__(self, config):
         self.config = config
-        self.logger = logger
-        self.data_source = DataSource(config, logger)
+        self.data_source = DataSource(config)
         self.db_util = DbUtil()
 
     def get_repo_id(self, project_name, repo_name):
-        project_id = self.db_util.select_project_id(self.data_source.get_connection(), project_name, self.logger)
-        repo_id = self.db_util.select_repo_id(self.data_source.get_connection(), project_id, repo_name, self.logger)
+        project_id = self.db_util.select_project_id(self.data_source.get_connection(), project_name,
+                                                    logging.getLogger())
+        repo_id = self.db_util.select_repo_id(self.data_source.get_connection(), project_id, repo_name,
+                                              logging.getLogger())
         return repo_id
 
     def get_issue_tracker_id(self, repo_id, url, type):
@@ -26,10 +29,11 @@ class GithubDAO:
         return issue_tracker_id
 
     def get_user_id(self, user_name, user_email):
-        user_id = self.db_util.select_user_id_by_name(self.data_source.get_connection(), user_name, self.logger)
+        user_id = self.db_util.select_user_id_by_name(self.data_source.get_connection(), user_name, logging.getLogger())
         if user_id is None:
-            self.db_util.insert_user(self.data_source.get_connection(), user_name, user_email, self.logger)
-            user_id = self.db_util.select_user_id_by_name(self.data_source.get_connection(), user_name, self.logger)
+            self.db_util.insert_user(self.data_source.get_connection(), user_name, user_email, logging.getLogger())
+            user_id = self.db_util.select_user_id_by_name(self.data_source.get_connection(), user_name,
+                                                          logging.getLogger())
         return user_id
 
     def get_user_name(self, user_id):
@@ -40,7 +44,7 @@ class GithubDAO:
         if row:
             user_name = row[0]
         else:
-            self.logger.warning("No user with id " + user_id)
+            logging.warning("No user with id " + user_id)
         return user_name
 
     def get_event_type_id(self, event_type):
@@ -58,7 +62,7 @@ class GithubDAO:
         if row:
             commit_id = row[0]
         else:
-            self.logger.warning("No commit with sha " + str(sha))
+            logging.warning("No commit with sha " + str(sha))
         return commit_id
 
     def get_comment_user_id(self, comment_created_at):
@@ -69,7 +73,7 @@ class GithubDAO:
         if row:
             author_id = row[0]
         else:
-            self.logger.warning("No comment with created_at " + str(comment_created_at))
+            logging.warning("No comment with created_at " + str(comment_created_at))
         return author_id
 
     def get_issue_id_by_own_id(self, own_id, issue_tracker_id):
@@ -80,7 +84,7 @@ class GithubDAO:
         if row:
             issue_id = row[0]
         else:
-            self.logger.warning("No issue with own_id " + str(own_id))
+            logging.warning("No issue with own_id " + str(own_id))
         return issue_id
 
     def get_own_ids(self, issue_tracker_id):
@@ -92,7 +96,7 @@ class GithubDAO:
             for row in rows:
                 issue_ids.append(row[0])
         else:
-            self.logger.warning("No issues for issue tracker " + str(issue_tracker_id))
+            logging.warning("No issues for issue tracker " + str(issue_tracker_id))
         return issue_ids
 
     def insert_issue(self, user_id, own_id, summary, version, created_at, updated_at, issue_tracker_id):
@@ -106,7 +110,7 @@ class GithubDAO:
         if row:
             issue_id = row[0]
         else:
-            self.logger.warning("No issue with own_id " + str(own_id) + " and created at " + str(created_at))
+            logging.warning("No issue with own_id " + str(own_id) + " and created at " + str(created_at))
         return issue_id
 
     def update_issue(self, issue_id, user_id, summary, version, created_at, updated_at):
@@ -192,7 +196,7 @@ class GithubDAO:
         if row:
             label_id = row[0]
         else:
-            self.logger.warning("No label with name " + str(label_name))
+            logging.warning("No label with name " + str(label_name))
         return label_id
 
     def __insert_issue_tracker(self, repo_id, type, url):
@@ -211,7 +215,7 @@ class GithubDAO:
         if row:
             issue_tracker_id = row[0]
         else:
-            self.logger.warning("No issue tracker with url " + str(url))
+            logging.warning("No issue tracker with url " + str(url))
         return issue_tracker_id
 
     def __insert_issue_label(self, issue_id, label_id):
@@ -236,7 +240,7 @@ class GithubDAO:
         if row:
             event_type_id = row[0]
         else:
-            self.logger.warning("No event type with name " + str(event_type))
+            logging.warning("No event type with name " + str(event_type))
         return event_type_id
 
     def get_issue_max_created_at(self, issue_tracker_id):
@@ -248,7 +252,7 @@ class GithubDAO:
         if row:
             max_created_at = row[0]
         else:
-            self.logger.warning("No max created_at in issue")
+            logging.warning("No max created_at in issue")
         return max_created_at
 
     def get_issue_max_last_change_at(self, issue_tracker_id):
@@ -260,5 +264,19 @@ class GithubDAO:
         if row:
             max_last_change_at = row[0]
         else:
-            self.logger.warning("No max last_change_at in issue")
+            logging.warning("No max last_change_at in issue")
         return max_last_change_at
+
+    def get_issue_comments(self, issue_tracker_id):
+        query = "SELECT m.id, m.issue_id, m.body FROM message m JOIN issue i ON m.issue_id = i.id and i.issue_tracker_id = %s"
+        arguments = [issue_tracker_id]
+        rows = self.data_source.get_rows(query, arguments)
+        messages = []
+        for row in rows:
+            message = {
+                "id": row[0],
+                "issue_id": row[1],
+                "body": row[2]
+            }
+            messages.append(message)
+        return messages

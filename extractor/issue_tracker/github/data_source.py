@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 __author__ = 'agustin ventura'
 
+import logging
 import sys
 
 sys.path.insert(0, "..\\..")
@@ -9,16 +10,15 @@ import mysql.connector
 
 
 class DataSource:
-    def __init__(self, config, logger):
+    def __init__(self, config):
         self.config = config
-        self.logger = logger
         self.__connect()
 
     def __connect(self):
         try:
             self.cnx = mysql.connector.connect(**self.config)
         except Exception, e:
-            self.logger.error(
+            logging.error(
                 "Error establishing database connection with configuration " + self.config + ": " + e.message)
             self.cnx = None
 

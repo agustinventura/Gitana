@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 __author__ = 'agustin ventura'
 
+import logging
 import re
 import sys
 
@@ -13,8 +14,7 @@ from extractor.util.date_util import DateUtil
 
 # I'm mixing here two concepts: Data access object and iterator, should divide them
 class GithubQuerier:
-    def __init__(self, repo_name, access_token, logger):
-        self.logger = logger
+    def __init__(self, repo_name, access_token):
         self.repo_name = repo_name
         self.github = Github(access_token)
         self.repository = self.__load_repository()
@@ -31,7 +31,7 @@ class GithubQuerier:
         try:
             repository = self.github.get_repo(self.repo_name)
         except Exception, e:
-            self.logger.error("Error loading repository " + self.repo_name + ": " + e.message)
+            logging.error("Error loading repository " + self.repo_name + ": " + e.message)
         return repository
 
     def load_issues_page(self, last_date):
@@ -124,7 +124,7 @@ class GithubQuerier:
             self.current_page = 0
             self.issues_initialized = True
         else:
-            self.logger("Error loading issues, repository " + self.repo_name + "not initialized")
+            logging.error("Error loading issues, repository " + self.repo_name + "not initialized")
 
     def __get_last_page(self):
         last_page_url = self.issues._getLastPageUrl()

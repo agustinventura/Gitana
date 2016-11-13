@@ -2,21 +2,25 @@
 # -*- coding: utf-8 -*-
 __author__ = 'agustin ventura'
 
+import logging
 import sys
 
 sys.path.insert(0, "..\\..")
+from github_dao import GithubDAO
 
 
 class IssueWriter:
-    def __init__(self, github_querier, github_dao, issue_tracker_id, interval, logger):
+    def __init__(self, github_querier, issue_tracker_id, issues, config):
         self.github_querier = github_querier
-        self.github_dao = github_dao
+        self.github_dao = None
+        self.config = config
         self.issue_tracker_id = issue_tracker_id
-        self.logger = logger
-        self.interval = interval
+        self.issues = issues
 
     def __call__(self):
-        for issue in self.interval:
+        self.github_dao = GithubDAO(self.config)
+        for issue in self.issues:
+            logging.info("Writing issue " + str(issue.number))
             self.write(issue)
 
     def write(self, issue):
@@ -73,7 +77,6 @@ class IssueWriter:
             comment_data["user"] = self.__write_user(user_data)
             self.github_dao.insert_issue_comment(issue_id, comment_data["user"], comment_data["id"], comment_pos + 1,
                                                  comment_data["body"], comment_data["created_at"])
-            self.__write_issue_reference(comment_data["body"], issue_id)
 
     def __update_comments(self, issue, issue_id):
         self.github_dao.delete_issue_comments(issue_id)
@@ -95,7 +98,7 @@ class IssueWriter:
                                                    issue_event["detail"], issue_event["creator_id"],
                                                    issue_event["created_at"], issue_event["target_user_id"])
             else:
-                self.logger.warning("Skipped event " + str(event.id) + " because it has no actor")
+                logging.warning("Skipped event " + str(event.id) + " because it has no actor")
 
     def __process_event(self, event_data, issue_event):
         event_type = event_data["event"]
@@ -132,7 +135,7 @@ class IssueWriter:
             issue_event["detail"] = author_name + " " + event_type + " " + event_data["actor"].login + " in issue " + \
                                     str(issue_event["issue_own_id"])
         else:
-            self.logger.warning(
+            logging.warning(
                 event_data["actor"].login + " was mentioned in event created at " + str(event_data["created_at"]) +
                                 " but no comment was found")
             issue_event["detail"] = event_data["actor"].login + " " + event_type + " in issue " + str(
@@ -151,8 +154,8 @@ class IssueWriter:
             if commit_id is not None:
                 self.github_dao.insert_issue_commit(issue_event["issue_own_id"], commit_id)
             else:
-                self.logger.warning("Issue " + str(issue_event["issue_own_id"]) + " is related to commit " +
-                                    str(event_data["commit_id"]) + " but commit is not in db. Ignoring relationship.")
+                logging.warning("Issue " + str(issue_event["issue_own_id"]) + " is related to commit " +
+                                str(event_data["commit_id"]) + " but commit is not in db. Ignoring relationship.")
         else:
             issue_event["detail"] += " without commit"
 
@@ -179,7 +182,6 @@ class IssueWriter:
         self.github_dao.insert_issue_comment(issue_id, user_id, 0, 0, issue_data["body"],
                                              issue_data["created_at"])
         if issue_data["body"] is not None:
-            self.__write_issue_reference(issue_data["body"], issue_id)
             self.__write_issue_attachment(issue_data["body"], issue_id)
 
     def __update_issue_body(self, issue_id, user_id, issue_data):
@@ -187,22 +189,9 @@ class IssueWriter:
         self.github_dao.insert_issue_comment(issue_id, user_id, 0, 0, issue_data["body"],
                                              issue_data["created_at"])
         if issue_data["body"] is not None:
-            self.github_dao.delete_issue_reference(issue_id);
-            self.__write_issue_reference(issue_data["body"], issue_id)
+            self.github_dao.delete_issue_reference(issue_id)
             self.github_dao.delete_issue_attachment(issue_id)
             self.__write_issue_attachment(issue_data["body"], issue_id)
-
-    def __write_issue_reference(self, body, issue_id):
-        referenced_issues_own_id = self.github_querier.read_issue_references(body)
-        for referenced_issue_own_id in referenced_issues_own_id:
-            referenced_issue_id = self.github_dao.get_issue_id_by_own_id(referenced_issue_own_id[2:],
-                                                                         self.issue_tracker_id)
-            if referenced_issue_id is not None:
-                self.github_dao.insert_issue_reference(issue_id, referenced_issue_id)
-            else:
-                self.logger.warning(
-                    "Issue " + str(issue_id) + " references issue with own_id " + str(referenced_issue_own_id)
-                    + " but no one exists")
 
     def __write_issue_attachment(self, body, issue_id):
         attachment_urls = self.github_querier.read_issue_attachments(body)

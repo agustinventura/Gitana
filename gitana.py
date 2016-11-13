@@ -163,14 +163,14 @@ class Gitana:
 
     def import_github_tracker_data(self, db_name, project_name, repo_name, url, github_repo_full_name, access_token,
                                    recover_import):
-        self.logger.info("importing github data")
+        logging.info("importing github data")
         github_importer = GithubImporter(db_name, project_name, repo_name, url, github_repo_full_name, access_token,
                                          recover_import,
-                                         self.config, self.logger)
+                                         self.config)
         github_importer.import_issues()
 
     def update_github_tracker_data(self, db_name, project_name, repo_name, url, github_repo_full_name, access_token):
-        self.logger.info("updating github data")
+        logging.info("updating github data")
         github_updater = GithubUpdater(db_name, project_name, repo_name, url, github_repo_full_name, access_token,
-                                       self.config, self.logger)
+                                       self.config)
         github_updater.update_issues()
