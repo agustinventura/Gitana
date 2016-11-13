@@ -14,8 +14,13 @@ class DataSource:
         self.config = config
         self.__connect()
 
+    def __del__(self):
+        logging.info("DataSource destroyed")
+        self.close_connection()
+
     def __connect(self):
         try:
+            logging.debug("Opening database connection")
             self.cnx = mysql.connector.connect(**self.config)
         except Exception, e:
             logging.error(
@@ -29,14 +34,15 @@ class DataSource:
             self.__connect()
         return self.cnx.cursor()
 
-    def __del__(self):
-        if self.cnx is not None:
-            self.cnx.close()
-
-    def get_connection(self):
+    def open_connection(self):
         if self.cnx is None:
             self.__connect()
         return self.cnx
+
+    def close_connection(self):
+        if self.cnx is not None:
+            logging.debug("Closing database connection")
+            self.cnx.disconnect()
 
     def execute_and_commit(self, query, arguments):
         cursor = self.__get_cursor()

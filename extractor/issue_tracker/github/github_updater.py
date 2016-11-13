@@ -55,7 +55,7 @@ class GithubUpdater:
         multiprocessing_util.start_consumers(self.processes, queue_intervals, results)
         for interval in intervals:
             github_reader = GithubQuerier(self.github_repo_name, self.access_token)
-            issue_writer = IssueWriter(github_reader, issue_tracker_id, interval, self.config)
+            issue_writer = IssueWriter(github_reader, issue_tracker_id, interval, self.config, True)
             queue_intervals.put(issue_writer)
 
         # Add end-of-queue markers

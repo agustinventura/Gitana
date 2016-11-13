@@ -45,11 +45,9 @@ def update_2048(g):
     g.update_github_tracker_data("db_2048", "2048", "2048", "https://github.com/gabrielecirulli/2048",
                                  "gabrielecirulli/2048", "493852caff7a314e894a4ea35002652de127b910")
 
-
-
 def main():
     g = Gitana(CONFIG, None)
-    process_pruebagit(g)
+    # process_pruebagit(g)
     update_pruebagit(g)
     #process_2048(g)
     # recover_2048(g)

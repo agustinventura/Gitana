@@ -10,18 +10,28 @@ from github_dao import GithubDAO
 
 
 class IssueWriter:
-    def __init__(self, github_querier, issue_tracker_id, issues, config):
+    def __init__(self, github_querier, issue_tracker_id, issues, config, issue_update):
         self.github_querier = github_querier
         self.github_dao = None
         self.config = config
         self.issue_tracker_id = issue_tracker_id
         self.issues = issues
+        self.issue_update = issue_update
+
+    def __del__(self):
+        logging.debug("IssueWriter destroyed")
+        if self.github_dao is not None:
+            self.github_dao.close()
 
     def __call__(self):
         self.github_dao = GithubDAO(self.config)
         for issue in self.issues:
-            logging.info("Writing issue " + str(issue.number))
-            self.write(issue)
+            if not self.issue_update:
+                logging.info("Writing issue " + str(issue.number))
+                self.write(issue)
+            else:
+                logging.info("Updating issue" + str(issue.number))
+                self.update(issue)
 
     def write(self, issue):
         user_data = self.github_querier.read_user(issue)
@@ -70,9 +80,9 @@ class IssueWriter:
         self.__write_labels(issue, issue_id)
 
     def __write_comments(self, issue, issue_id):
-        comments = self.github_querier.read_comments(issue);
+        comments = self.github_querier.read_comments(issue)
         for comment_pos, comment in enumerate(comments):
-            comment_data = self.github_querier.read_comment(comment);
+            comment_data = self.github_querier.read_comment(comment)
             user_data = self.github_querier.read_user_data(comment_data["user"])
             comment_data["user"] = self.__write_user(user_data)
             self.github_dao.insert_issue_comment(issue_id, comment_data["user"], comment_data["id"], comment_pos + 1,
@@ -88,7 +98,7 @@ class IssueWriter:
             if event_data["actor"] is not None:
                 issue_event = {"issue_id": issue_id,
                                "issue_own_id": issue.number}
-                actor_data = self.github_querier.read_actor(event);
+                actor_data = self.github_querier.read_actor(event)
                 issue_event["creator_id"] = self.__write_user(actor_data)
                 issue_event["event_type_id"] = self.github_dao.get_event_type_id(event_data["event"])
                 issue_event["created_at"] = event_data["created_at"]

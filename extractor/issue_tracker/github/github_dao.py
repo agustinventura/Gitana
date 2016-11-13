@@ -14,10 +14,18 @@ class GithubDAO:
         self.data_source = DataSource(config)
         self.db_util = DbUtil()
 
+    def __del__(self):
+        logging.debug("GithubDAO destroyed")
+        self.close()
+
+    def close(self):
+        if self.data_source is not None:
+            self.data_source.close_connection()
+
     def get_repo_id(self, project_name, repo_name):
-        project_id = self.db_util.select_project_id(self.data_source.get_connection(), project_name,
+        project_id = self.db_util.select_project_id(self.data_source.open_connection(), project_name,
                                                     logging.getLogger())
-        repo_id = self.db_util.select_repo_id(self.data_source.get_connection(), project_id, repo_name,
+        repo_id = self.db_util.select_repo_id(self.data_source.open_connection(), project_id, repo_name,
                                               logging.getLogger())
         return repo_id
 
@@ -29,10 +37,11 @@ class GithubDAO:
         return issue_tracker_id
 
     def get_user_id(self, user_name, user_email):
-        user_id = self.db_util.select_user_id_by_name(self.data_source.get_connection(), user_name, logging.getLogger())
+        user_id = self.db_util.select_user_id_by_name(self.data_source.open_connection(), user_name,
+                                                      logging.getLogger())
         if user_id is None:
-            self.db_util.insert_user(self.data_source.get_connection(), user_name, user_email, logging.getLogger())
-            user_id = self.db_util.select_user_id_by_name(self.data_source.get_connection(), user_name,
+            self.db_util.insert_user(self.data_source.open_connection(), user_name, user_email, logging.getLogger())
+            user_id = self.db_util.select_user_id_by_name(self.data_source.open_connection(), user_name,
                                                           logging.getLogger())
         return user_id
 
