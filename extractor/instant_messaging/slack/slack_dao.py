@@ -6,6 +6,7 @@ from extractor.util.db_util import DbUtil
 
 
 class SlackDao():
+
     def __init__(self, config, logger):
         self.config = config
         self.logger = logger
@@ -113,8 +114,7 @@ class SlackDao():
             cursor.execute(query, arguments)
             self.cnx.commit()
         except:
-            self.logger.warning("message " + str(own_id) + ") for channel id: " + str(channel_id) + " not inserted",
-                                exc_info=True)
+            self.logger.warning("message " + str(own_id) + ") for channel id: " + str(channel_id) + " not inserted", exc_info=True)
 
     def get_user_id(self, user_name, user_email):
         if user_email:
@@ -132,11 +132,29 @@ class SlackDao():
 
         return user_id
 
-    def insert_channel(self, own_id, instant_messaging_id, name, description, created_at, last_changed_at):
+    def select_channel_own_id(self, channel_id, instant_messaging_id):
+        cursor = self.cnx.cursor()
+        query = "SELECT own_id " \
+                "FROM channel " \
+                "WHERE id = %s AND instant_messaging_id = %s"
+        arguments = [channel_id, instant_messaging_id]
+        cursor.execute(query, arguments)
+
+        row = cursor.fetchone()
+        cursor.close()
+
+        if row:
+            found = row[0]
+        else:
+            self.logger.warning("no channel found for instant messaging " + str(instant_messaging_id))
+
+        return found
+
+    def insert_channel(self, own_id, instant_messaging_id, name, description, created_at, last_change_at):
         cursor = self.cnx.cursor()
         query = "INSERT IGNORE INTO channel " \
                 "VALUES (%s, %s, %s, %s, %s, %s, %s)"
-        arguments = [None, own_id, instant_messaging_id, name, description, created_at, last_changed_at]
+        arguments = [None, own_id, instant_messaging_id, name, description, created_at, last_change_at]
         cursor.execute(query, arguments)
         self.cnx.commit()
 
@@ -179,3 +197,36 @@ class SlackDao():
             self.logger.warning("no instant messaging linked to " + str(url))
 
         return found
+
+    def get_channel_last_change_at(self, own_id, instant_messaging_id):
+        cursor = self.cnx.cursor()
+
+        query = "SELECT last_change_at FROM channel WHERE own_id = %s AND instant_messaging_id = %s"
+        arguments = [own_id, instant_messaging_id]
+        cursor.execute(query, arguments)
+
+        found = None
+        row = cursor.fetchone()
+        cursor.close()
+        if row:
+            found = row[0]
+
+        return found
+
+    def get_channel_ids(self, instant_messaging_id):
+        channel_ids = []
+
+        cursor = self.cnx.cursor()
+        query = "SELECT id FROM channel WHERE instant_messaging_id = %s"
+        arguments = [instant_messaging_id]
+        cursor.execute(query, arguments)
+
+        row = cursor.fetchone()
+
+        while row:
+            channel_id = row[0]
+            channel_ids.append(channel_id)
+            row = cursor.fetchone()
+
+        cursor.close()
+        return channel_ids

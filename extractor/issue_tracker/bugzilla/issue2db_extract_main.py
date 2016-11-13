@@ -2,10 +2,9 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
+from datetime import datetime
 import multiprocessing
 import sys
-from datetime import datetime
-
 sys.path.insert(0, "..//..//..")
 
 from issue2db_extract_issue import BugzillaIssue2Db
@@ -16,10 +15,11 @@ from bugzilla_dao import BugzillaDao
 
 
 class BugzillaIssue2DbMain():
+
     NUM_PROCESSES = 5
 
     def __init__(self, db_name, project_name,
-                 repo_name, type, issue_tracker_name, url, product, before_date, recover_import, num_processes,
+                 repo_name, type, issue_tracker_name, url, product, before_date, num_processes,
                  config, logger):
         self.logger = logger
         self.log_path = self.logger.name.rsplit('.', 1)[0] + "-" + project_name
@@ -31,7 +31,6 @@ class BugzillaIssue2DbMain():
         self.issue_tracker_name = issue_tracker_name
         self.repo_name = repo_name
         self.before_date = before_date
-        self.recover_import = recover_import
 
         if num_processes:
             self.num_processes = num_processes
@@ -51,12 +50,9 @@ class BugzillaIssue2DbMain():
         return '-'.join([str(e) for e in elements])
 
     def insert_issue_data(self, repo_id, issue_tracker_id):
-        if self.recover_import:
-            imported = self.dao.get_already_imported_issue_ids(issue_tracker_id, repo_id)
-            issues = list(set(self.querier.get_issue_ids(None, None, self.before_date)) - set(imported))
-            issues.sort()
-        else:
-            issues = self.querier.get_issue_ids(None, None, self.before_date)
+        imported = self.dao.get_already_imported_issue_ids(issue_tracker_id, repo_id)
+        issues = list(set(self.querier.get_issue_ids(None, None, self.before_date)) - set(imported))
+        issues.sort()
 
         intervals = [i for i in multiprocessing_util.get_tasks_intervals(issues, self.num_processes) if len(i) > 0]
 
@@ -67,9 +63,8 @@ class BugzillaIssue2DbMain():
         multiprocessing_util.start_consumers(self.num_processes, queue_intervals, results)
 
         for interval in intervals:
-            issue_extractor = BugzillaIssue2Db(self.db_name, repo_id, issue_tracker_id, self.url, self.product,
-                                               interval,
-                                               self.config, self.log_path)
+            issue_extractor = BugzillaIssue2Db(self.db_name, repo_id, issue_tracker_id, self.url, self.product, interval,
+                                       self.config, self.log_path)
             queue_intervals.put(issue_extractor)
 
         # Add end-of-queue markers
@@ -89,9 +84,8 @@ class BugzillaIssue2DbMain():
         multiprocessing_util.start_consumers(self.num_processes, queue_intervals, results)
 
         for interval in intervals:
-            issue_dependency_extractor = BugzillaIssueDependency2Db(self.db_name, repo_id, issue_tracker_id, self.url,
-                                                                    self.product, interval,
-                                                                    self.config, self.log_path)
+            issue_dependency_extractor = BugzillaIssueDependency2Db(self.db_name, repo_id, issue_tracker_id, self.url, self.product, interval,
+                                                            self.config, self.log_path)
             queue_intervals.put(issue_dependency_extractor)
 
         # Add end-of-queue markers
@@ -118,6 +112,6 @@ class BugzillaIssue2DbMain():
 
             minutes_and_seconds = divmod((end_time-start_time).total_seconds(), 60)
             self.logger.info("BugzillaIssue2DbMain finished after " + str(minutes_and_seconds[0])
-                             + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
+                         + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
         except:
             self.logger.error("BugzillaIssue2DbMain failed", exc_info=True)

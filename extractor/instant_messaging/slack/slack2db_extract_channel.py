@@ -109,12 +109,12 @@ class SlackChannel2Db(object):
             self.dao.insert_message_dependency(comment_id, message_id)
 
     def extract_message(self, message, channel_id, type, pos):
-        own_id = self.querier.get_message_own_id(message)
         author_name = self.querier.get_message_author_name(message)
         author_email = self.querier.get_message_author_email(message)
         author_id = self.dao.get_user_id(author_name, author_email)
-        created_at = self.querier.get_message_created_at(message)
         body = self.querier.get_message_body(message)
+        own_id = self.querier.get_message_own_id(message)
+        created_at = self.querier.get_message_created_at(message)
 
         if type == "message":
             message_type = "reply"
@@ -155,26 +155,18 @@ class SlackChannel2Db(object):
                 self.extract_file_upload(message, channel_id, pos)
                 pos += 1
             else:
-                self.extract_message(message, channel_id, type, pos)
+                if not self.querier.is_bot_message(message):
+                    self.extract_message(message, channel_id, type, pos)
+                #TODO deal with bot messages
                 pos += 1
-
-    def extract_channel(self, channel):
-        own_id = self.querier.get_channel_id(channel)
-        name = self.querier.get_channel_name(channel)
-        description = self.querier.get_channel_description(channel)
-        created_at = self.querier.get_channel_created_at(channel)
-
-        channel_id = self.dao.insert_channel(own_id, self.instant_messaging_id, name, description, created_at, None)
-
-        self.extract_messages(channel_id, own_id)
 
     def extract(self):
         try:
             start_time = datetime.now()
 
             for channel_id in self.interval:
-                channel = self.querier.get_channel(channel_id)
-                self.extract_channel(channel)
+                channel_own_id = self.dao.select_channel_own_id(channel_id, self.instant_messaging_id)
+                self.extract_messages(channel_id, channel_own_id)
 
             end_time = datetime.now()
 
