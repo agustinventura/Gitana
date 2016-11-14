@@ -21,8 +21,8 @@ from extractor.forum.stackoverflow.stackoverflow2db_update import StackOverflow2
 from extractor.instant_messaging.slack.slack2db_extract_main import Slack2DbMain
 from extractor.issue_tracker.bugzilla.issue2db_extract_main import BugzillaIssue2DbMain
 from extractor.issue_tracker.bugzilla.issue2db_update import BugzillaIssue2DbUpdate
-from extractor.issue_tracker.github.github_importer import GithubImporter
-from extractor.issue_tracker.github.github_updater import GithubUpdater
+from extractor.issue_tracker.github.issue2db_extract_main import GithubIssue2DbMain
+from extractor.issue_tracker.github.issue2db_update import GithubIssue2DbUpdate
 
 LOG_FOLDER_PATH = "logs"
 LOG_NAME = "gitana"
@@ -164,13 +164,14 @@ class Gitana:
     def import_github_tracker_data(self, db_name, project_name, repo_name, url, github_repo_full_name, access_token,
                                    recover_import, processes):
         logging.info("importing github data")
-        github_importer = GithubImporter(db_name, project_name, repo_name, url, github_repo_full_name, access_token,
-                                         recover_import, processes, self.config)
+        github_importer = GithubIssue2DbMain(db_name, project_name, repo_name, url, github_repo_full_name, access_token,
+                                             recover_import, processes, self.config)
         github_importer.import_issues()
 
     def update_github_tracker_data(self, db_name, project_name, repo_name, url, github_repo_full_name, access_token,
                                    processes):
         logging.info("updating github data")
-        github_updater = GithubUpdater(db_name, project_name, repo_name, url, github_repo_full_name, access_token,
-                                       processes, self.config)
+        github_updater = GithubIssue2DbUpdate(db_name, project_name, repo_name, url, github_repo_full_name,
+                                              access_token,
+                                              processes, self.config)
         github_updater.update_issues()

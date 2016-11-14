@@ -4,7 +4,7 @@ __author__ = 'agustin ventura'
 
 import logging
 
-from data_source import DataSource
+from extractor.util.data_source import DataSource
 from extractor.util.db_util import DbUtil
 
 

@@ -9,7 +9,7 @@ sys.path.insert(0, "..\\..")
 from github_dao import GithubDAO
 
 
-class IssueWriter:
+class GithubIssue2Db:
     def __init__(self, github_querier, issue_tracker_id, issues, config, issue_update):
         self.github_querier = github_querier
         self.github_dao = None

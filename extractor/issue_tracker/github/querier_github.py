@@ -12,7 +12,6 @@ from github import Github
 from extractor.util.date_util import DateUtil
 
 
-# I'm mixing here two concepts: Data access object and iterator, should divide them
 class GithubQuerier:
     def __init__(self, repo_name, access_token):
         self.repo_name = repo_name
