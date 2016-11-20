@@ -21,19 +21,16 @@ def add_poison_pills(processes, task_queue):
 
 
 def get_tasks_intervals(elements, num_processes):
-    elements.sort()
     chunk_size = len(elements) / num_processes
-
+    if len(elements) % num_processes != 0:
+        chunk_size += 1
+    chunks = []
     if chunk_size == 0:
         chunks = [elements]
     else:
-        chunks = [elements[i:i + chunk_size] for i in range(0, len(elements), chunk_size)]
-
-    intervals = []
-    for chunk in chunks:
-        intervals.append(chunk)
-
-    return intervals
+        for i in xrange(0, len(elements), chunk_size):
+            chunks.append(elements[i:i + chunk_size])
+    return chunks
 
 
 class Consumer(multiprocessing.Process):
@@ -52,6 +49,6 @@ class Consumer(multiprocessing.Process):
 
             answer = next_task()
             self.task_queue.task_done()
-            # self.result_queue.put(answer)
+            self.result_queue.put(answer)
 
         return

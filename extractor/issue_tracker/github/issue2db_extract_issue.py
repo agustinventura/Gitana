@@ -30,7 +30,7 @@ class GithubIssue2Db:
                 logging.info("Writing issue " + str(issue.number))
                 self.write(issue)
             else:
-                logging.info("Updating issue" + str(issue.number))
+                logging.info("Updating issue " + str(issue.number))
                 self.update(issue)
 
     def write(self, issue):

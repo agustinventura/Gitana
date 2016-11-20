@@ -252,30 +252,6 @@ class GithubDAO:
             logging.warning("No event type with name " + str(event_type))
         return event_type_id
 
-    def get_issue_max_created_at(self, issue_tracker_id):
-        max_created_at = None
-        query = "SELECT MAX(created_at) " \
-                "FROM issue WHERE issue_tracker_id = %s"
-        arguments = [issue_tracker_id]
-        row = self.data_source.get_row(query, arguments)
-        if row:
-            max_created_at = row[0]
-        else:
-            logging.warning("No max created_at in issue")
-        return max_created_at
-
-    def get_issue_max_last_change_at(self, issue_tracker_id):
-        max_last_change_at = None
-        query = "SELECT MAX(last_change_at) " \
-                "FROM issue WHERE issue_tracker_id = %s"
-        arguments = [issue_tracker_id]
-        row = self.data_source.get_row(query, arguments)
-        if row:
-            max_last_change_at = row[0]
-        else:
-            logging.warning("No max last_change_at in issue")
-        return max_last_change_at
-
     def get_issue_comments(self, issue_tracker_id):
         query = "SELECT m.id, m.issue_id, m.body FROM message m JOIN issue i ON m.issue_id = i.id and i.issue_tracker_id = %s"
         arguments = [issue_tracker_id]

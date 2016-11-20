@@ -119,19 +119,26 @@ class GithubQuerier:
                 self.issues = self.__get_all_issues_ascending()
             else:
                 self.issues = self.__get_new_issues_ascending(last_date)
-            self.last_page = self.__get_last_page()
-            self.current_page = 0
             self.issues_initialized = True
+            self.__read_last_page()
+            self.current_page = 0
         else:
             logging.error("Error loading issues, repository " + self.repo_name + "not initialized")
 
-    def __get_last_page(self):
+    def get_last_page(self):
+        if not self.issues_initialized:
+            self.__load_issues(None)
+
+        if self.last_page is None:
+            self.__read_last_page()
+        return self.last_page
+
+    def __read_last_page(self):
         last_page_url = self.issues._getLastPageUrl()
         if last_page_url is not None:
-            last_page = int(last_page_url.split("page=")[-1])
+            self.last_page = int(last_page_url.split("page=")[-1])
         else:
-            last_page = 0
-        return last_page
+            self.last_page = 0
 
     def __get_all_issues_ascending(self):
         return self.repository.get_issues(state="all", direction="asc")
@@ -139,3 +146,12 @@ class GithubQuerier:
     def __get_new_issues_ascending(self, last_date):
         return self.repository.get_issues(state="all", direction="asc",
                                           since=self.date_util.get_timestamp(last_date, "%Y-%m-%d %H:%M:%S"))
+
+    def read_page(self, page):
+        if not self.issues_initialized:
+            self.__load_issues(None)
+
+        if page <= self.last_page:
+            issues_page = self.issues.get_page(page)
+
+        return issues_page

@@ -43,7 +43,7 @@ class Gitana:
 
     def get_console_logger(self):
         self.logger = logging.getLogger()
-        self.logger.setLevel(logging.DEBUG)
+        self.logger.setLevel(logging.INFO)
 
         ch = logging.StreamHandler(sys.stdout)
         ch.setLevel(logging.DEBUG)
@@ -161,17 +161,18 @@ class Gitana:
         self.logger.info("updating slack data")
         # TODO
 
-    def import_github_tracker_data(self, db_name, project_name, repo_name, url, github_repo_full_name, access_token,
+    def import_github_tracker_data(self, db_name, project_name, repo_name, url, github_repo_full_name, access_tokens,
                                    recover_import, processes):
         logging.info("importing github data")
-        github_importer = GithubIssue2DbMain(db_name, project_name, repo_name, url, github_repo_full_name, access_token,
+        github_importer = GithubIssue2DbMain(db_name, project_name, repo_name, url, github_repo_full_name,
+                                             access_tokens,
                                              recover_import, processes, self.config)
         github_importer.import_issues()
 
-    def update_github_tracker_data(self, db_name, project_name, repo_name, url, github_repo_full_name, access_token,
+    def update_github_tracker_data(self, db_name, project_name, repo_name, url, github_repo_full_name, access_tokens,
                                    processes):
         logging.info("updating github data")
         github_updater = GithubIssue2DbUpdate(db_name, project_name, repo_name, url, github_repo_full_name,
-                                              access_token,
+                                              access_tokens,
                                               processes, self.config)
         github_updater.update_issues()
