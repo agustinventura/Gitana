@@ -46,7 +46,7 @@ class Gitana:
         self.logger.setLevel(logging.INFO)
 
         ch = logging.StreamHandler(sys.stdout)
-        ch.setLevel(logging.DEBUG)
+        ch.setLevel(logging.INFO)
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         ch.setFormatter(formatter)
         self.logger.addHandler(ch)
@@ -162,13 +162,12 @@ class Gitana:
         # TODO
 
     def import_github_tracker_data(self, db_name, project_name, repo_name, issue_tracker_name, github_repo_full_name,
-                                   access_tokens,
-                                   recover_import, processes):
+                                   access_tokens, processes):
         logging.info("importing github data")
         github_importer = GithubIssue2DbMain(db_name, project_name, repo_name, issue_tracker_name,
                                              github_repo_full_name,
                                              access_tokens,
-                                             recover_import, processes, self.config)
+                                             processes, self.config)
         github_importer.import_issues()
 
     def update_github_tracker_data(self, db_name, project_name, repo_name, issue_tracker_name, github_repo_full_name,

@@ -75,9 +75,14 @@ class GithubQuerier:
     def read_issue_references(self, body):
         if body is not None:
             return re.findall(self.issue_reference_pattern, body)
+        else:
+            return []
 
     def read_issue_attachments(self, body):
-        return re.findall(self.issue_attachment_pattern, body)
+        if body is not None:
+            return re.findall(self.issue_attachment_pattern, body)
+        else:
+            return []
 
     def read_labels(self, issue):
         return [label.name for label in issue.get_labels() if label.name is not None]

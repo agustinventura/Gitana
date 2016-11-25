@@ -19,8 +19,7 @@ from querier_github import IssuePageReader
 class GithubIssue2DbMain:
     NUM_PROCESSES = 5
 
-    def __init__(self, db_name, project_name, repo_name, tracker_name, github_repo_name, access_tokens, recover_import,
-                 processes,
+    def __init__(self, db_name, project_name, repo_name, tracker_name, github_repo_name, access_tokens, processes,
                  config):
         self.type = "github"
         self.tracker_name = tracker_name
@@ -33,7 +32,6 @@ class GithubIssue2DbMain:
         self.config = config
         self.github_reader = GithubQuerier(self.github_repo_name, access_tokens[0])
         self.github_dao = None
-        self.recover_import = recover_import
         if processes is None:
             self.processes = GithubIssue2DbMain.NUM_PROCESSES
         else:
@@ -46,15 +44,7 @@ class GithubIssue2DbMain:
         logging.info("Initializing issues database")
         self.repo_id = self.github_dao.get_repo_id(self.project_name, self.repo_name)
         issue_tracker_id = self.github_dao.get_issue_tracker_id(self.repo_id, self.tracker_name, self.type)
-        issues = None
-        if not self.recover_import:
-            # 2.a) Read all the issues
-            logging.info("Reading all the issues")
-            issues = self.read_all_issues()
-        else:
-            # 2.b) Read only modified issues since last date in database
-            logging.info("Recovering import")
-            issues = self.read_new_issues(issue_tracker_id)
+        issues = self.read_new_issues(issue_tracker_id)
         self.github_dao.close()
         self.github_dao = None
         # 3) Write the issues
@@ -103,11 +93,11 @@ class GithubIssue2DbMain:
         for issue in all_issues:
             if str(issue.number) not in issues_in_db:
                 issues.append(issue)
-        logging.info("Found " + str(len(issues)) + " issues for recover")
+        logging.info("Found " + str(len(issues)) + " new issues")
         return issues
 
     def __write_issues(self, issues, issue_tracker_id):
-        logging.info("Writing issues " + str(len(issues)) + " using " + str(self.processes) + " threads")
+        logging.info("Writing issues " + str(len(issues)) + " using " + str(self.processes) + " processes")
         intervals = multiprocessing_util.get_tasks_intervals(issues, self.processes)
         number_of_writers = len(intervals)
         queue_intervals = multiprocessing.JoinableQueue()
@@ -125,7 +115,7 @@ class GithubIssue2DbMain:
     def __write_issue_references(self, issue_tracker_id):
         self.github_dao = GithubDAO(self.config)
         comments = self.github_dao.get_issue_comments(issue_tracker_id)
-        logging.info("Analyzing " + str(len(comments)) + " comments using " + str(self.processes) + " threads")
+        logging.info("Analyzing " + str(len(comments)) + " comments using " + str(self.processes) + " processes")
         intervals = multiprocessing_util.get_tasks_intervals(comments, self.processes)
         number_of_writers = len(intervals)
         queue_intervals = multiprocessing.JoinableQueue()
