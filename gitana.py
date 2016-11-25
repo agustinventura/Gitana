@@ -161,18 +161,22 @@ class Gitana:
         self.logger.info("updating slack data")
         # TODO
 
-    def import_github_tracker_data(self, db_name, project_name, repo_name, url, github_repo_full_name, access_tokens,
+    def import_github_tracker_data(self, db_name, project_name, repo_name, issue_tracker_name, github_repo_full_name,
+                                   access_tokens,
                                    recover_import, processes):
         logging.info("importing github data")
-        github_importer = GithubIssue2DbMain(db_name, project_name, repo_name, url, github_repo_full_name,
+        github_importer = GithubIssue2DbMain(db_name, project_name, repo_name, issue_tracker_name,
+                                             github_repo_full_name,
                                              access_tokens,
                                              recover_import, processes, self.config)
         github_importer.import_issues()
 
-    def update_github_tracker_data(self, db_name, project_name, repo_name, url, github_repo_full_name, access_tokens,
+    def update_github_tracker_data(self, db_name, project_name, repo_name, issue_tracker_name, github_repo_full_name,
+                                   access_tokens,
                                    processes):
         logging.info("updating github data")
-        github_updater = GithubIssue2DbUpdate(db_name, project_name, repo_name, url, github_repo_full_name,
+        github_updater = GithubIssue2DbUpdate(db_name, project_name, repo_name, issue_tracker_name,
+                                              github_repo_full_name,
                                               access_tokens,
                                               processes, self.config)
         github_updater.update_issues()

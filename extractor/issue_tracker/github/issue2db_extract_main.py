@@ -13,17 +13,17 @@ from github_dao import GithubDAO
 from issue2db_extract_issue import GithubIssue2Db
 from issue2db_extract_issue_dependency import GithubIssueDependency2Db
 from extractor.util import multiprocessing_util
-from IssuePageReader import IssuePageReader
+from querier_github import IssuePageReader
 
 
 class GithubIssue2DbMain:
     NUM_PROCESSES = 5
 
-    def __init__(self, db_name, project_name, repo_name, url, github_repo_name, access_tokens, recover_import,
+    def __init__(self, db_name, project_name, repo_name, tracker_name, github_repo_name, access_tokens, recover_import,
                  processes,
                  config):
         self.type = "github"
-        self.url = url
+        self.tracker_name = tracker_name
         self.project_name = project_name
         self.db_name = db_name
         self.repo_name = repo_name
@@ -45,7 +45,7 @@ class GithubIssue2DbMain:
         self.github_dao = GithubDAO(self.config)
         logging.info("Initializing issues database")
         self.repo_id = self.github_dao.get_repo_id(self.project_name, self.repo_name)
-        issue_tracker_id = self.github_dao.get_issue_tracker_id(self.repo_id, self.url, self.type)
+        issue_tracker_id = self.github_dao.get_issue_tracker_id(self.repo_id, self.tracker_name, self.type)
         issues = None
         if not self.recover_import:
             # 2.a) Read all the issues

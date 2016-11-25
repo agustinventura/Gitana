@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from extractor.issue_tracker.github.IssueReader import IssueReader
 
 __author__ = 'agustin ventura'
 
+import logging
 import multiprocessing
 import sys
-import logging
 
 sys.path.insert(0, "..\\..")
 sys.path.insert(0, "..\\..")
 
 from querier_github import GithubQuerier
+from querier_github import IssueReader
 from github_dao import GithubDAO
 from issue2db_extract_issue import GithubIssue2Db
 from issue2db_extract_issue_dependency import GithubIssueDependency2Db
@@ -21,12 +21,13 @@ from extractor.util import multiprocessing_util
 class GithubIssue2DbUpdate:
     NUM_PROCESSES = 5
 
-    def __init__(self, db_name, project_name, repo_name, url, github_repo_name, access_tokens, processes, config):
+    def __init__(self, db_name, project_name, repo_name, tracker_name, github_repo_name, access_tokens, processes,
+                 config):
         self.type = "github"
         self.project_name = project_name
         self.db_name = db_name
         self.repo_name = repo_name
-        self.url = url
+        self.tracker_name = tracker_name
         self.repo_id = None
         self.github_repo_name = github_repo_name
         config.update({'database': db_name})
@@ -42,7 +43,7 @@ class GithubIssue2DbUpdate:
     def update_issues(self):
         # 1) Init database
         self.repo_id = self.github_dao.get_repo_id(self.project_name, self.repo_name)
-        issue_tracker_id = self.github_dao.get_issue_tracker_id(self.repo_id, self.url, self.type)
+        issue_tracker_id = self.github_dao.get_issue_tracker_id(self.repo_id, self.tracker_name, self.type)
         # 2) Update all the issues
         own_ids = self.github_dao.get_own_ids(issue_tracker_id)
         logging.info("updating " + str(len(own_ids)) + " issues")
