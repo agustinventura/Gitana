@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import time
+
+from github import GithubException
 
 __author__ = 'agustin ventura'
 
@@ -55,7 +58,7 @@ class GithubIssue2DbMain:
         self.__write_issue_references(issue_tracker_id)
 
     def read_all_issues(self):
-        page_number = self.github_reader.get_last_page()
+        page_number = self.get_pages()
         logging.info(
             "Reading " + str(page_number) + " pages of issues using " + str(len(self.access_tokens)) + " tokens")
         results = None
@@ -84,6 +87,23 @@ class GithubIssue2DbMain:
         logging.info("Read " + str(len(issues)) + " issues")
         return issues
 
+    def get_pages(self):
+        page_number = None
+        while page_number is None:
+            try:
+                page_number = self.github_reader.get_last_page()
+            except GithubException as e:
+                if e.status == 403:
+                    logging.info(
+                        "Exceded token capacity while reading pages. Awaiting one hour")
+                    time.sleep(3600)
+                    logging.info("Restarting page reading")
+                else:
+                    logging.error("Caught unknown exception while reading pages: " + str(e))
+            except Exception as e:
+                logging.error("Caught unknown exception while reading pages: " + str(e))
+        return page_number
+
     def read_new_issues(self, issue_tracker_id):
         issues = []
         all_issues = self.read_all_issues()
@@ -106,7 +126,7 @@ class GithubIssue2DbMain:
         logging.info("Starting writers")
         for interval in intervals:
             github_reader = GithubQuerier(self.github_repo_name, self.access_tokens[0])
-            issue_writer = GithubIssue2Db(github_reader, issue_tracker_id, interval, self.config, False)
+            issue_writer = GithubIssue2Db(github_reader, issue_tracker_id, interval, self.config)
             queue_intervals.put(issue_writer)
         multiprocessing_util.add_poison_pills(number_of_writers, queue_intervals)
         logging.info("Waiting for writers to finish")

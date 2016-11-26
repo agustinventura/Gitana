@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import time
+
+from github import GithubException
+
 __author__ = 'agustin ventura'
 
 import logging
@@ -10,13 +14,12 @@ from github_dao import GithubDAO
 
 
 class GithubIssue2Db:
-    def __init__(self, github_querier, issue_tracker_id, issues, config, issue_update):
+    def __init__(self, github_querier, issue_tracker_id, issues, config):
         self.github_querier = github_querier
         self.github_dao = None
         self.config = config
         self.issue_tracker_id = issue_tracker_id
         self.issues = issues
-        self.issue_update = issue_update
 
     def __del__(self):
         logging.debug("IssueWriter destroyed")
@@ -25,15 +28,42 @@ class GithubIssue2Db:
 
     def __call__(self):
         self.github_dao = GithubDAO(self.config)
-        for issue in self.issues:
-            if not self.issue_update:
-                logging.info("Writing issue " + str(issue.number))
+        i = 0
+        while i < len(self.issues):
+            issue = self.issues[i]
+            try:
                 self.write(issue)
-            else:
-                logging.info("Updating issue " + str(issue.number))
-                self.update(issue)
+                i += 1
+            except GithubException as e:
+                if e.status == 403:
+                    logging.info(
+                        "Exceded token capacity while reading issue " + str(issue) + ". Awaiting one hour")
+                    time.sleep(3600)
+                    logging.info("Restarting issue reading")
+                    if self.issue_in_db(issue):
+                        self.update(issue)
+                    else:
+                        self.write(issue)
+                    i += 1
+                else:
+                    logging.error("Caught unknown exception while reading pages: " + str(e))
+            except Exception as e:
+                logging.error("Caught unknown exception while writing issue " + str(issue) + ": " + str(e))
+                i += 1
 
     def write(self, issue):
+        if not self.issue_in_db(issue):
+            logging.info("Writing issue " + str(issue.number))
+            self.add(issue)
+        else:
+            logging.info("Updating issue " + str(issue.number))
+            self.update(issue)
+
+    def issue_in_db(self, issue):
+        id = self.github_dao.get_issue_id_by_own_id(issue.number, self.issue_tracker_id)
+        return id is not None
+
+    def add(self, issue):
         user_data = self.github_querier.read_user(issue)
         user_id = self.__write_user(user_data)
         issue_id = self.__write_issue(issue, user_id)

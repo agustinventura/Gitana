@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import time
+
+from github import GithubException
+
 __author__ = 'agustin ventura'
 
 import logging
@@ -172,9 +176,25 @@ class IssuePageReader:
 
     def __call__(self):
         issues = []
-        for issue_page in self.issues_pages:
+        i = 0
+        while i < len(self.issues_pages):
+            issue_page = self.issues_pages[i]
             logging.info("Reading page " + str(issue_page))
-            issues.append(self.github_querier.read_page(issue_page))
+            try:
+                issues.append(self.github_querier.read_page(issue_page))
+                i += 1
+            except GithubException as e:
+                if e.status == 403:
+                    logging.info(
+                        "Exceded token capacity while reading issue page " + str(issue_page) + ". Awaiting one hour")
+                    time.sleep(3600)
+                    logging.info("Restarting issue page reading")
+                else:
+                    logging.error("Caught unknown exception while reading pages: " + str(e))
+            except:
+                e = sys.exc_info()[0]
+                logging.error("Caught unknown exception while reading issue page " + str(issue_page) + ": " + e.message)
+                i += 1
         return issues
 
 
@@ -187,7 +207,23 @@ class IssueReader:
 
     def __call__(self):
         issues = []
-        for issue in self.issues:
+        i = 0
+        while i < len(self.issues):
+            issue = self.issues[i]
             logging.info("Reading issue " + str(issue))
-            issues.append(self.github_querier.load_issue(int(issue)))
+            try:
+                issues.append(self.github_querier.load_issue(int(issue)))
+                i += 1
+            except GithubException as e:
+                if e.status == 403:
+                    logging.info(
+                        "Exceded token capacity while reading issue " + str(issue) + ". Awaiting one hour")
+                    time.sleep(3600)
+                    logging.info("Restarting issue reading")
+                else:
+                    logging.error("Caught unknown exception while reading pages: " + str(e))
+            except:
+                e = sys.exc_info()[0]
+                logging.error("Caught unknown exception while reading issue " + str(issue) + ": " + e.message)
+                i += 1
         return issues

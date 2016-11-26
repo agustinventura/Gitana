@@ -85,7 +85,7 @@ class GithubIssue2DbUpdate:
         multiprocessing_util.start_consumers(number_of_consumers, queue_intervals, results)
         for interval in intervals:
             github_reader = GithubQuerier(self.github_repo_name, self.access_tokens[0])
-            issue_writer = GithubIssue2Db(github_reader, issue_tracker_id, interval, self.config, True)
+            issue_writer = GithubIssue2Db(github_reader, issue_tracker_id, interval, self.config)
             queue_intervals.put(issue_writer)
         multiprocessing_util.add_poison_pills(number_of_consumers, queue_intervals)
         logging.info("Waiting for writers to finish")
