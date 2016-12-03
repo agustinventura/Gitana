@@ -2,18 +2,14 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import logging
-import logging.handlers
-import re
-import sys
 from datetime import datetime
+import re
 from email.utils import parseaddr
 
-sys.path.insert(0, "..//..//..")
-
 from querier_bugzilla import BugzillaQuerier
-from extractor.util.date_util import DateUtil
+from util.date_util import DateUtil
 from bugzilla_dao import BugzillaDao
+from util.logging_util import LoggingUtil
 
 
 class BugzillaIssue2Db(object):
@@ -28,20 +24,16 @@ class BugzillaIssue2Db(object):
         self.repo_id = repo_id
         self.issue_tracker_id = issue_tracker_id
         self.interval = interval
+        self.fileHandler = None
         config.update({'database': db_name})
         self.config = config
-
+        self.logging_util = LoggingUtil()
         self.date_util = DateUtil()
 
     def __call__(self):
-        LOG_FILENAME = self.log_path + "-issue2db"
-        self.logger = logging.getLogger(LOG_FILENAME)
-        fileHandler = logging.FileHandler(LOG_FILENAME + "-" + str(self.interval[0]) + "-" + str(self.interval[-1]) + ".log", mode='w')
-        formatter = logging.Formatter("%(asctime)s:%(levelname)s:%(message)s", "%Y-%m-%d %H:%M:%S")
-
-        fileHandler.setFormatter(formatter)
-        self.logger.setLevel(logging.INFO)
-        self.logger.addHandler(fileHandler)
+        log_filename = self.log_path + "-issue2db-" + str(self.interval[0]) + "-" + str(self.interval[-1])
+        self.logger = self.logging_util.get_logger(log_filename)
+        self.fileHandler = self.logging_util.get_file_handler(self.logger, log_filename, "info")
 
         try:
             self.querier = BugzillaQuerier(self.url, self.product, self.logger)
@@ -88,8 +80,7 @@ class BugzillaIssue2Db(object):
     def extract_history(self, issue_id, history):
         for event in history:
             try:
-                created_at = self.date_util.get_timestamp(self.querier.get_event_property(event, 'when'),
-                                                          '%Y%m%dT%H:%M:%S')
+                created_at = self.date_util.get_timestamp(self.querier.get_event_property(event, 'when'), '%Y%m%dT%H:%M:%S')
                 creator_email = self.querier.get_event_property(event, 'who')
                 creator_id = self.dao.get_user_id(self.querier.get_user_name(creator_email), creator_email)
 
@@ -131,10 +122,8 @@ class BugzillaIssue2Db(object):
                 position = self.querier.get_comment_property(comment, 'count')
                 author_email = self.querier.get_comment_property(comment, 'author')
                 author_id = self.dao.get_user_id(self.querier.get_user_name(author_email), author_email)
-                created_at = self.date_util.get_timestamp(self.querier.get_comment_property(comment, 'creation_time'),
-                                                          '%Y%m%dT%H:%M:%S')
-                self.dao.insert_issue_comment(own_id, position, self.dao.get_message_type_id("comment"), issue_id, body,
-                                              None, author_id, created_at)
+                created_at = self.date_util.get_timestamp(self.querier.get_comment_property(comment, 'creation_time'), '%Y%m%dT%H:%M:%S')
+                self.dao.insert_issue_comment(own_id, position, self.dao.get_message_type_id("comment"), issue_id, body, None, author_id, created_at)
 
                 attachment_id = self.querier.get_comment_property(comment, 'attachment_id')
                 if attachment_id:
@@ -181,10 +170,10 @@ class BugzillaIssue2Db(object):
         hardware = self.querier.get_issue_operating_system(issue)
         priority = self.querier.get_issue_priority(issue)
         severity = self.querier.get_issue_severity(issue)
-        created_at = self.date_util.get_timestamp(self.querier.get_issue_creation_time(issue), '%Y%m%dT%H:%M:%S')
-        last_change_at = self.date_util.get_timestamp(self.querier.issue_last_change_time(issue), '%Y%m%dT%H:%M:%S')
+        created_at = self.querier.get_issue_creation_time(issue)
+        last_change_at = self.querier.get_issue_last_change_time(issue)
 
-        reference_id = self.dao.find_reference_id(self.querier.get_issue_version(issue), issue_own_id, self.repo_id)
+        reference_id = self.dao.find_reference_id(version, issue_own_id, self.repo_id)
 
         issue_creator_email = self.querier.get_issue_creator(issue)
         user_id = self.dao.get_user_id(self.querier.get_user_name(issue_creator_email), issue_creator_email)
@@ -193,12 +182,10 @@ class BugzillaIssue2Db(object):
         if stored_issue_last_change:
             if last_change_at != stored_issue_last_change:
                 flag_insert_issue_data = True
-                self.dao.update_issue(issue_own_id, self.issue_tracker_id, summary, component, version, hardware,
-                                      priority, severity, reference_id, last_change_at)
+                self.dao.update_issue(issue_own_id, self.issue_tracker_id, summary, component, version, hardware, priority, severity, reference_id, last_change_at)
         else:
             flag_insert_issue_data = True
-            self.dao.insert_issue(issue_own_id, self.issue_tracker_id, summary, component, version, hardware, priority,
-                                  severity, reference_id, user_id, created_at, last_change_at)
+            self.dao.insert_issue(issue_own_id, self.issue_tracker_id, summary, component, version, hardware, priority, severity, reference_id, user_id, created_at, last_change_at)
 
         if flag_insert_issue_data:
             issue_id = self.dao.select_issue_id(issue_own_id, self.issue_tracker_id, self.repo_id)
@@ -248,6 +235,7 @@ class BugzillaIssue2Db(object):
 
             minutes_and_seconds = divmod((end_time-start_time).total_seconds(), 60)
             self.logger.info("BugzillaIssue2Db finished after " + str(minutes_and_seconds[0])
-                             + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
+                           + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
+            self.logging_util.remove_file_handler_logger(self.logger, self.fileHandler)
         except Exception, e:
             self.logger.error("BugzillaIssue2Db failed", exc_info=True)

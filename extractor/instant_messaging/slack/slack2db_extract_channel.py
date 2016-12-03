@@ -2,18 +2,15 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import logging
-import logging.handlers
-import sys
 from datetime import datetime
-
-sys.path.insert(0, "..//..//..")
 
 from querier_slack import SlackQuerier
 from slack_dao import SlackDao
+from util.logging_util import LoggingUtil
 
 
 class SlackChannel2Db(object):
+
     def __init__(self, db_name, instant_messaging_id, interval, token,
                  config, log_path):
         self.log_path = log_path
@@ -21,19 +18,15 @@ class SlackChannel2Db(object):
         self.db_name = db_name
         self.instant_messaging_id = instant_messaging_id
         self.token = token
+        self.fileHandler = None
         config.update({'database': db_name})
         self.config = config
+        self.logging_util = LoggingUtil()
 
     def __call__(self):
-        LOG_FILENAME = self.log_path + "-channel2db"
-        self.logger = logging.getLogger(LOG_FILENAME)
-        fileHandler = logging.FileHandler(
-            LOG_FILENAME + "-" + str(self.interval[0]) + "-" + str(self.interval[-1]) + ".log", mode='w')
-        formatter = logging.Formatter("%(asctime)s:%(levelname)s:%(message)s", "%Y-%m-%d %H:%M:%S")
-
-        fileHandler.setFormatter(formatter)
-        self.logger.setLevel(logging.INFO)
-        self.logger.addHandler(fileHandler)
+        log_filename = self.log_path + "-channel2db-" + str(self.interval[0]) + "-" + str(self.interval[-1])
+        self.logger = self.logging_util.get_logger(log_filename)
+        self.fileHandler = self.logging_util.get_file_handler(self.logger, log_filename, "info")
 
         try:
             self.querier = SlackQuerier(self.token, self.logger)
@@ -87,8 +80,7 @@ class SlackChannel2Db(object):
         author_email = self.querier.get_message_author_email(comment)
         author_id = self.dao.get_user_id(author_name, author_email)
 
-        self.dao.insert_message(own_id, pos, self.dao.get_message_type_id("comment"), channel_id, body, author_id,
-                                created_at)
+        self.dao.insert_message(own_id, pos, self.dao.get_message_type_id("comment"), channel_id, body, author_id, created_at)
         comment_id = self.dao.select_message_id(own_id, channel_id)
         return comment_id
 
@@ -121,8 +113,7 @@ class SlackChannel2Db(object):
         else:
             message_type = "info"
 
-        self.dao.insert_message(own_id, pos, self.dao.get_message_type_id(message_type), channel_id, body, author_id,
-                                created_at)
+        self.dao.insert_message(own_id, pos, self.dao.get_message_type_id(message_type), channel_id, body, author_id, created_at)
         message_id = self.dao.select_message_id(own_id, channel_id)
         self.extract_url_attachments(message, message_id)
 
@@ -134,8 +125,7 @@ class SlackChannel2Db(object):
         created_at = self.querier.get_message_created_at(message)
         body = self.querier.get_message_body(message).split(':')[0]
 
-        self.dao.insert_message(own_id, pos, self.dao.get_message_type_id("file_upload"), channel_id, body, author_id,
-                                created_at)
+        self.dao.insert_message(own_id, pos, self.dao.get_message_type_id("file_upload"), channel_id, body, author_id, created_at)
         message_id = self.dao.select_message_id(own_id, channel_id)
         self.extract_file_attachment_info(message, message_id)
 
@@ -157,7 +147,7 @@ class SlackChannel2Db(object):
             else:
                 if not self.querier.is_bot_message(message):
                     self.extract_message(message, channel_id, type, pos)
-                # TODO deal with bot messages
+                #TODO deal with bot messages
                 pos += 1
 
     def extract(self):
@@ -170,8 +160,9 @@ class SlackChannel2Db(object):
 
             end_time = datetime.now()
 
-            minutes_and_seconds = divmod((end_time - start_time).total_seconds(), 60)
+            minutes_and_seconds = divmod((end_time-start_time).total_seconds(), 60)
             self.logger.info("SlackChannel2Db finished after " + str(minutes_and_seconds[0])
-                             + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
+                           + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
+            self.logging_util.remove_file_handler_logger(self.logger, self.fileHandler)
         except Exception, e:
             self.logger.error("SlackChannel2Db failed", exc_info=True)

@@ -2,28 +2,28 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import multiprocessing
-import sys
-from datetime import datetime
 
-sys.path.insert(0, "..//..//..")
+from datetime import datetime
+import multiprocessing
 
 from issue2db_extract_issue import BugzillaIssue2Db
 from issue2db_extract_issue_dependency import BugzillaIssueDependency2Db
-from extractor.util import multiprocessing_util
+from util import multiprocessing_util
 from bugzilla_dao import BugzillaDao
 
 
 class BugzillaIssue2DbUpdate():
+
     NUM_PROCESSES = 5
 
     def __init__(self, db_name, project_name,
-                 repo_name, issue_tracker_name, product, num_processes,
+                 repo_name, issue_tracker_name, url, product, num_processes,
                  config, logger):
 
         self.logger = logger
         self.log_path = self.logger.name.rsplit('.', 1)[0] + "-" + project_name
         self.issue_tracker_name = issue_tracker_name
+        self.url = url
         self.product = product
         self.project_name = project_name
         self.db_name = db_name
@@ -53,7 +53,7 @@ class BugzillaIssue2DbUpdate():
 
         for interval in intervals:
             issue_extractor = BugzillaIssue2Db(self.db_name, repo_id, issue_tracker_id, url, self.product, interval,
-                                               self.config, self.log_path)
+                                       self.config, self.log_path)
             queue_intervals.put(issue_extractor)
 
         # Add end-of-queue markers
@@ -70,9 +70,8 @@ class BugzillaIssue2DbUpdate():
         multiprocessing_util.start_consumers(self.num_processes, queue_intervals, results)
 
         for interval in intervals:
-            issue_dependency_extractor = BugzillaIssueDependency2Db(self.db_name, repo_id, issue_tracker_id, url,
-                                                                    self.product, interval,
-                                                                    self.config, self.log_path)
+            issue_dependency_extractor = BugzillaIssueDependency2Db(self.db_name, repo_id, issue_tracker_id, url, self.product, interval,
+                                                 self.config, self.log_path)
             queue_intervals.put(issue_dependency_extractor)
 
         # Add end-of-queue markers
@@ -85,7 +84,7 @@ class BugzillaIssue2DbUpdate():
         project_id = self.dao.select_project_id(self.project_name)
         repo_id = self.dao.select_repo_id(project_id, self.repo_name)
         issue_tracker_id = self.dao.select_issue_tracker_id(repo_id, self.issue_tracker_name)
-        issue_tracker_url = self.dao.select_issue_tracker_url(repo_id, self.issue_tracker_name)
+        issue_tracker_url = self.url
 
         cursor = self.dao.get_cursor()
         query = "SELECT i.own_id FROM issue i " \
@@ -118,6 +117,6 @@ class BugzillaIssue2DbUpdate():
 
             minutes_and_seconds = divmod((end_time-start_time).total_seconds(), 60)
             self.logger.info("BugzillaIssue2DbUpdate finished after " + str(minutes_and_seconds[0])
-                             + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
+                         + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
         except:
             self.logger.error("BugzillaIssue2DbUpdate failed", exc_info=True)

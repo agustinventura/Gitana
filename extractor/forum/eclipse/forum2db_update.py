@@ -2,15 +2,12 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import multiprocessing
-import sys
 from datetime import datetime
-
-sys.path.insert(0, "..//..//..")
+import multiprocessing
 
 from querier_eclipse_forum import EclipseForumQuerier
 from forum2db_extract_topic import EclipseTopic2Db
-from extractor.util import multiprocessing_util
+from util import multiprocessing_util
 from eclipse_forum_dao import EclipseForumDao
 
 
@@ -18,11 +15,12 @@ class EclipseForum2DbUpdate():
 
     NUM_PROCESSES = 2
 
-    def __init__(self, db_name, project_name, forum_name, num_processes,
+    def __init__(self, db_name, project_name, forum_name, eclipse_forum_url, num_processes,
                  config, logger):
         self.logger = logger
         self.log_path = self.logger.name.rsplit('.', 1)[0] + "-" + project_name
         self.project_name = project_name
+        self.url = eclipse_forum_url
         self.db_name = db_name
         self.forum_name = forum_name
 
@@ -51,8 +49,7 @@ class EclipseForum2DbUpdate():
 
                 if topic_in_db:
                     views = self.querier.get_topic_views(topic)
-                    last_change_at = self.date_util.get_timestamp(self.querier.get_last_change_at(topic),
-                                                                  "%a, %d %B %Y %H:%M")
+                    last_change_at = self.date_util.get_timestamp(self.querier.get_last_change_at(topic), "%a, %d %B %Y %H:%M")
                     self.dao.update_topic_info(topic_in_db, forum_id, views, last_change_at)
 
             next_page = self.querier.go_next_page()
@@ -63,8 +60,7 @@ class EclipseForum2DbUpdate():
         if topic_ids:
             self.update_topics_info(forum_id)
 
-            intervals = [i for i in multiprocessing_util.get_tasks_intervals(topic_ids, self.num_processes) if
-                         len(i) > 0]
+            intervals = [i for i in multiprocessing_util.get_tasks_intervals(topic_ids, self.num_processes) if len(i) > 0]
 
             queue_extractors = multiprocessing.JoinableQueue()
             results = multiprocessing.Queue()
@@ -87,14 +83,13 @@ class EclipseForum2DbUpdate():
             start_time = datetime.now()
             project_id = self.dao.select_project_id(self.project_name)
             forum_id = self.dao.select_forum_id(self.forum_name, project_id)
-            url = self.dao.select_forum_url(self.forum_name, project_id)
-            self.querier = EclipseForumQuerier(url, self.logger)
+            self.querier = EclipseForumQuerier(self.url, self.logger)
             self.get_topics(forum_id)
             self.cnx.close()
             end_time = datetime.now()
 
             minutes_and_seconds = divmod((end_time-start_time).total_seconds(), 60)
             self.logger.info("EclipseForum2DbUpdate finished after " + str(minutes_and_seconds[0])
-                             + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
+                         + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
         except:
             self.logger.error("EclipseForum2DbUpdate failed", exc_info=True)

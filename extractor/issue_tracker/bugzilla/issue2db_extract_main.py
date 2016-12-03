@@ -2,16 +2,13 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import multiprocessing
-import sys
 from datetime import datetime
-
-sys.path.insert(0, "..//..//..")
+import multiprocessing
 
 from issue2db_extract_issue import BugzillaIssue2Db
 from issue2db_extract_issue_dependency import BugzillaIssueDependency2Db
 from querier_bugzilla import BugzillaQuerier
-from extractor.util import multiprocessing_util
+from util import multiprocessing_util
 from bugzilla_dao import BugzillaDao
 
 
@@ -52,7 +49,7 @@ class BugzillaIssue2DbMain():
 
     def insert_issue_data(self, repo_id, issue_tracker_id):
         imported = self.dao.get_already_imported_issue_ids(issue_tracker_id, repo_id)
-        issues = list(set(self.querier.get_issue_ids(None, None, self.before_date)) - set(imported))
+        issues = list(set(self.querier.get_issue_ids(self.before_date)) - set(imported))
         issues.sort()
 
         intervals = [i for i in multiprocessing_util.get_tasks_intervals(issues, self.num_processes) if len(i) > 0]
@@ -64,9 +61,8 @@ class BugzillaIssue2DbMain():
         multiprocessing_util.start_consumers(self.num_processes, queue_intervals, results)
 
         for interval in intervals:
-            issue_extractor = BugzillaIssue2Db(self.db_name, repo_id, issue_tracker_id, self.url, self.product,
-                                               interval,
-                                               self.config, self.log_path)
+            issue_extractor = BugzillaIssue2Db(self.db_name, repo_id, issue_tracker_id, self.url, self.product, interval,
+                                       self.config, self.log_path)
             queue_intervals.put(issue_extractor)
 
         # Add end-of-queue markers
@@ -86,9 +82,8 @@ class BugzillaIssue2DbMain():
         multiprocessing_util.start_consumers(self.num_processes, queue_intervals, results)
 
         for interval in intervals:
-            issue_dependency_extractor = BugzillaIssueDependency2Db(self.db_name, repo_id, issue_tracker_id, self.url,
-                                                                    self.product, interval,
-                                                                    self.config, self.log_path)
+            issue_dependency_extractor = BugzillaIssueDependency2Db(self.db_name, repo_id, issue_tracker_id, self.url, self.product, interval,
+                                                            self.config, self.log_path)
             queue_intervals.put(issue_dependency_extractor)
 
         # Add end-of-queue markers
@@ -100,7 +95,7 @@ class BugzillaIssue2DbMain():
     def split_issue_extraction(self):
         project_id = self.dao.select_project_id(self.project_name)
         repo_id = self.dao.select_repo_id(project_id, self.repo_name)
-        issue_tracker_id = self.dao.insert_issue_tracker(repo_id, self.issue_tracker_name, self.url, self.type)
+        issue_tracker_id = self.dao.insert_issue_tracker(repo_id, self.issue_tracker_name, self.type)
         self.insert_issue_data(repo_id, issue_tracker_id)
 
         self.dao.restart_connection()
@@ -115,6 +110,6 @@ class BugzillaIssue2DbMain():
 
             minutes_and_seconds = divmod((end_time-start_time).total_seconds(), 60)
             self.logger.info("BugzillaIssue2DbMain finished after " + str(minutes_and_seconds[0])
-                             + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
+                         + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
         except:
             self.logger.error("BugzillaIssue2DbMain failed", exc_info=True)

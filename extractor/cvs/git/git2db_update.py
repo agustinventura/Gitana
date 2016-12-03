@@ -2,27 +2,26 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import multiprocessing
-import sys
 from datetime import datetime
-
-sys.path.insert(0, "..//..//..")
+import multiprocessing
 
 from querier_git import GitQuerier
 from extractor.cvs.git.git2db_extract_reference import Git2DbReference
-from extractor.util import multiprocessing_util
+from util import multiprocessing_util
 from git_dao import GitDao
 
 
 class Git2DbUpdate():
+
     NUM_PROCESSES = 10
 
     def __init__(self, db_name, project_name,
-                 repo_name, git_repo_path, before_date,
+                 repo_name, issue_tracker_name, git_repo_path, before_date,
                  num_processes, config, logger):
         self.logger = logger
         self.log_path = self.logger.name.rsplit('.', 1)[0] + "-" + project_name
         self.git_repo_path = git_repo_path
+        self.issue_tracker_name = issue_tracker_name
         self.project_name = project_name
         self.db_name = db_name
         self.repo_name = repo_name
@@ -99,13 +98,13 @@ class Git2DbUpdate():
         try:
             start_time = datetime.now()
             project_id = self.dao.select_project_id(self.project_name)
-            repo_id = self.dao.select_repo_id(project_id, self.repo_name)
+            repo_id = self.dao.select_repo_id(self.repo_name)
             self.update_repo(repo_id, self.get_import_type(repo_id))
             self.dao.restart_connection()
             self.dao.fix_commit_parent_table(repo_id)
             end_time = datetime.now()
             minutes_and_seconds = divmod((end_time-start_time).total_seconds(), 60)
             self.logger.info("Git2DbUpdate finished after " + str(minutes_and_seconds[0])
-                             + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
+                         + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
         except:
             self.logger.error("Git2DbUpdate failed", exc_info=True)

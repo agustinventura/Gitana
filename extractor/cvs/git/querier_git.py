@@ -2,14 +2,12 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import re
-import string
-import time
-from datetime import datetime
-
 from git import *
-
-from extractor.util.date_util import DateUtil
+import re
+from datetime import datetime
+import string
+from util.date_util import DateUtil
+import time
 
 
 class GitQuerier():
@@ -60,13 +58,13 @@ class GitQuerier():
 
         # a limitation in the gitpython api when working on windows causes
         # the diff method to stop working for diffs containing more than 7000 files
-        if len(files_in_commit) < 7000:
-            if retrieve_patch:
-                diffs = parent.diff(commit, create_patch=True)
-            else:
-                diffs = parent.diff(commit, create_patch=False)
-        else:
-            diffs = self.get_diffs_manually(parent, commit, retrieve_patch)
+        # if len(files_in_commit) < 7000:
+        #     if retrieve_patch:
+        #         diffs = parent.diff(commit, create_patch=True)
+        #     else:
+        #         diffs = parent.diff(commit, create_patch=False)
+        # else:
+        diffs = self.get_diffs_manually(parent, commit, retrieve_patch)
 
         return diffs
 
@@ -139,7 +137,7 @@ class GitQuerier():
         return file_path
 
     def get_file_current(self, diff):
-        if isinstance(diff, tuple):
+        if isinstance(diff, dict):
             file_current = diff.get('rename_to')
         else:
             if diff.rename_to:
@@ -190,7 +188,7 @@ class GitQuerier():
     def is_renamed(self, diff):
         flag = False
 
-        if isinstance(diff, tuple):
+        if isinstance(diff, dict):
             flag = diff.get('renamed')
         else:
             try:
@@ -201,10 +199,10 @@ class GitQuerier():
 
             if not flag:
                 try:
-                    # sometimes the library does not set the renamed value to True even if the file is actually renamed
+                    #sometimes the library does not set the renamed value to True even if the file is actually renamed
                     if (not diff.a_blob) and (not diff.b_blob):
                         if re.match(r"^(.*)\nrename from(.*)\nrename to(.*)$", diff.diff, re.M):
-                            flag = True
+                           flag = True
                 except:
                     flag = False
         return flag
@@ -258,15 +256,13 @@ class GitQuerier():
             elif prop == "committed_date":
                 found = commit.committed_date
         except:
-            # ugly but effective. GitPython may fail in retrieving properties with large content. Waiting some seconds seems to fix the problem
+            #ugly but effective. GitPython may fail in retrieving properties with large content. Waiting some seconds seems to fix the problem
             try:
                 time.sleep(5)
                 found = self.get_commit_property(commit, prop)
             except:
                 found = None
-                self.logger.error(
-                    "something went wrong when trying to retrieve the attribute " + prop + " from the commit " + str(
-                        commit.hexsha))
+                self.logger.error("something went wrong when trying to retrieve the attribute " + prop + " from the commit " + str(commit.hexsha))
 
         return found
 
@@ -278,7 +274,7 @@ class GitQuerier():
         return diff.new_file
 
     def get_rename_from(self, diff):
-        if isinstance(diff, tuple):
+        if isinstance(diff, dict):
             file_previous = diff.get("rename_from")
         else:
             if diff.rename_from:

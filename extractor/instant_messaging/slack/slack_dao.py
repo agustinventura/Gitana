@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-from extractor.util.db_util import DbUtil
+from util.db_util import DbUtil
 
 
 class SlackDao():
@@ -175,11 +175,11 @@ class SlackDao():
 
         return found
 
-    def insert_instant_messaging(self, project_id, instant_messaging_name, url, type):
+    def insert_instant_messaging(self, project_id, instant_messaging_name, type):
         cursor = self.cnx.cursor()
         query = "INSERT IGNORE INTO instant_messaging " \
-                "VALUES (%s, %s, %s, %s, %s)"
-        arguments = [None, project_id, instant_messaging_name, url, type]
+                "VALUES (%s, %s, %s, %s)"
+        arguments = [None, project_id, instant_messaging_name, type]
         cursor.execute(query, arguments)
         self.cnx.commit()
 
@@ -195,7 +195,7 @@ class SlackDao():
         if row:
             found = row[0]
         else:
-            self.logger.warning("no instant messaging linked to " + str(url))
+            self.logger.warning("no instant messaging with name " + str(instant_messaging_name))
 
         return found
 

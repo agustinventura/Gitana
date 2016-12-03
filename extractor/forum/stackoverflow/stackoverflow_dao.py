@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-from extractor.util.db_util import DbUtil
+from util.db_util import DbUtil
 
 
 class StackOverflowDao():
@@ -51,11 +51,11 @@ class StackOverflowDao():
 
         return found
 
-    def insert_forum(self, project_id, forum_name, url, type):
+    def insert_forum(self, project_id, forum_name, type):
         cursor = self.cnx.cursor()
         query = "INSERT IGNORE INTO forum " \
-                "VALUES (%s, %s, %s, %s, %s)"
-        arguments = [None, project_id, forum_name, url, type]
+                "VALUES (%s, %s, %s, %s)"
+        arguments = [None, project_id, forum_name, type]
         cursor.execute(query, arguments)
         self.cnx.commit()
 
@@ -72,7 +72,7 @@ class StackOverflowDao():
         if row:
             found = row[0]
         else:
-            self.logger.warning("no forum linked to " + str(forum_name))
+            self.logger.warning("no forum with name " + str(forum_name))
 
         return found
 

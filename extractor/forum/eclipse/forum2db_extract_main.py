@@ -2,16 +2,13 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import multiprocessing
-import sys
 from datetime import datetime
-
-sys.path.insert(0, "..//..//..")
+import multiprocessing
 
 from querier_eclipse_forum import EclipseForumQuerier
 from forum2db_extract_topic import EclipseTopic2Db
-from extractor.util import multiprocessing_util
-from extractor.util.date_util import DateUtil
+from util import multiprocessing_util
+from util.date_util import DateUtil
 from eclipse_forum_dao import EclipseForumDao
 
 
@@ -59,8 +56,7 @@ class EclipseForum2DbMain():
         else:
             if self.before_date:
                 topic_created_at = self.querier.get_topic_created_at(topic)
-                if self.date_util.get_timestamp(topic_created_at, "%a, %d %B %Y") <= self.date_util.get_timestamp(
-                        self.before_date, "%Y-%m-%d"):
+                if self.date_util.get_timestamp(topic_created_at, "%a, %d %B %Y") <= self.date_util.get_timestamp(self.before_date, "%Y-%m-%d"):
                     self.dao.insert_topic(own_id, forum_id, title, views, last_change_at)
             else:
                 self.dao.insert_topic(own_id, forum_id, title, views, last_change_at)
@@ -111,7 +107,7 @@ class EclipseForum2DbMain():
         try:
             start_time = datetime.now()
             project_id = self.dao.select_project_id(self.project_name)
-            forum_id = self.dao.insert_forum(project_id, self.forum_name, self.url, self.type)
+            forum_id = self.dao.insert_forum(project_id, self.forum_name, self.type)
             self.get_topics(forum_id)
             self.dao.close_connection()
 
@@ -119,6 +115,6 @@ class EclipseForum2DbMain():
 
             minutes_and_seconds = divmod((end_time-start_time).total_seconds(), 60)
             self.logger.info("EclipseForum2DbMain finished after " + str(minutes_and_seconds[0])
-                             + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
+                         + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
         except:
             self.logger.error("EclipseForum2DbMain failed", exc_info=True)

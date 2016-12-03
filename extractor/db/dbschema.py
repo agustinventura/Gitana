@@ -2,9 +2,6 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import sys
-sys.path.insert(0, "..//..")
-
 
 class DbSchema():
 
@@ -455,7 +452,7 @@ class DbSchema():
                                   "project_id int(20), " \
                                   "name varchar(255), " \
                                   "INDEX n (name), " \
-                                  "CONSTRAINT name UNIQUE (project_id, name)" \
+                                  "CONSTRAINT name UNIQUE (name)" \
                                   ") ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;"
 
         create_table_reference = "CREATE TABLE reference( " \
@@ -566,9 +563,8 @@ class DbSchema():
                                      "id int(20) AUTO_INCREMENT PRIMARY KEY, " \
                                      "repo_id int(20), " \
                                      "name varchar(512), " \
-                                     "url varchar(512), " \
                                      "type varchar(512), " \
-                                     "CONSTRAINT name UNIQUE (repo_id, name)" \
+                                     "CONSTRAINT name UNIQUE (name)" \
                                      ") ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;"
 
         create_table_issue = "CREATE TABLE issue ( " \
@@ -672,9 +668,8 @@ class DbSchema():
                              "id int(20) AUTO_INCREMENT PRIMARY KEY, " \
                              "project_id int(20), " \
                              "name varchar(512), " \
-                             "url varchar(512), " \
                              "type varchar(512), " \
-                             "CONSTRAINT name UNIQUE (project_id, name)" \
+                             "CONSTRAINT name UNIQUE (name)" \
                              ") ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;"
 
         create_table_topic = "CREATE TABLE topic ( " \
@@ -701,9 +696,8 @@ class DbSchema():
                                          "id int(20) AUTO_INCREMENT PRIMARY KEY, " \
                                          "project_id int(20), " \
                                          "name varchar(512), " \
-                                         "url varchar(512), " \
                                          "type varchar(512), " \
-                                         "CONSTRAINT name UNIQUE (project_id, name)" \
+                                         "CONSTRAINT name UNIQUE (name)" \
                                          ") ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;"
 
         create_table_channel = "CREATE TABLE channel ( " \
