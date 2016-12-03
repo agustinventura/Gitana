@@ -2,20 +2,20 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-from exporter import resources
 import os
+
+from exporter import resources
 
 BOOTSTRAP_COLUMNS = 12
 CHARTS_PER_LINE = 2
 
 
 class HtmlGenerator():
-
     def __init__(self, logger):
         self.logger = logger
 
     def group(self, lst, n):
-        grouped = [lst[i:i+n] for i in range(0, len(lst), n)]
+        grouped = [lst[i:i + n] for i in range(0, len(lst), n)]
         last_group = grouped[-1]
 
         while len(last_group) < n:
@@ -36,7 +36,8 @@ class HtmlGenerator():
         html_string += """<style>
                 .jumbotron {
                     position: relative;
-                    background: #000 url(\'""" + os.path.dirname(resources.__file__).replace("\\", "/") + "/jumbotron.png" + """\') center center;
+                    background: #000 url(\'""" + os.path.dirname(resources.__file__).replace("\\",
+                                                                                             "/") + "/jumbotron.png" + """\') center center;
                     width: 100%;
                     height: 100%;
                     background-size: cover;
@@ -151,9 +152,10 @@ class HtmlGenerator():
 
                     for chart in grouped_chart:
                         if not chart:
-                            html_string += """<div class="col-sm-""" + str(BOOTSTRAP_COLUMNS/CHARTS_PER_LINE) + """\"></div>"""
+                            html_string += """<div class="col-sm-""" + str(
+                                BOOTSTRAP_COLUMNS / CHARTS_PER_LINE) + """\"></div>"""
                         else:
-                            html_string += """<div class="col-sm-""" + str(BOOTSTRAP_COLUMNS/CHARTS_PER_LINE) + """\">
+                            html_string += """<div class="col-sm-""" + str(BOOTSTRAP_COLUMNS / CHARTS_PER_LINE) + """\">
                                                 <div>""" + chart.decode('utf-8') + """</div>
                                               </div>"""
 
@@ -171,4 +173,3 @@ class HtmlGenerator():
         html_string += """</body>
                             </html>"""
         return html_string
-

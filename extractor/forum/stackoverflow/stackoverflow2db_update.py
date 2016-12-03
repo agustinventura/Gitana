@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-from datetime import datetime
 import multiprocessing
+from datetime import datetime
 
-from util import multiprocessing_util
 from querier_stackoverflow import StackOverflowQuerier
 from stackoverflow2db_extract_topic import StackOverflowTopic2Db
 from stackoverflow_dao import StackOverflowDao
+from util import multiprocessing_util
 
 
 class StackOverflow2DbUpdate():
@@ -44,7 +44,8 @@ class StackOverflow2DbUpdate():
             multiprocessing_util.start_consumers(len(self.tokens), queue_extractors, results)
 
             for i in range(len(intervals)):
-                topic_extractor = StackOverflowTopic2Db(self.db_name, forum_id, intervals[i], self.tokens[i], self.config, self.log_path)
+                topic_extractor = StackOverflowTopic2Db(self.db_name, forum_id, intervals[i], self.tokens[i],
+                                                        self.config, self.log_path)
                 queue_extractors.put(topic_extractor)
 
             # Add end-of-queue markers
@@ -62,8 +63,8 @@ class StackOverflow2DbUpdate():
             self.dao.close_connection()
             end_time = datetime.now()
 
-            minutes_and_seconds = divmod((end_time-start_time).total_seconds(), 60)
+            minutes_and_seconds = divmod((end_time - start_time).total_seconds(), 60)
             self.logger.info("StackOverflow2DbUpdate finished after " + str(minutes_and_seconds[0])
-                         + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
+                             + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
         except:
             self.logger.error("StackOverflow2DbUpdate failed", exc_info=True)

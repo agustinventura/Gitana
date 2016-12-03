@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from extractor.issue_tracker.github.issue2db_extract_main import GitHubIssue2DbMain
+
 __author__ = 'valerio cosentino'
 
 import glob
@@ -21,8 +23,7 @@ from extractor.forum.stackoverflow.stackoverflow2db_update import StackOverflow2
 from extractor.instant_messaging.slack.slack2db_extract_main import Slack2DbMain
 from extractor.issue_tracker.bugzilla.issue2db_extract_main import BugzillaIssue2DbMain
 from extractor.issue_tracker.bugzilla.issue2db_update import BugzillaIssue2DbUpdate
-from extractor.issue_tracker.github.issue2db_extract_main import GithubIssue2DbMain
-from extractor.issue_tracker.github.issue2db_update import GithubIssue2DbUpdate
+from extractor.issue_tracker.github.issue2db_update import GitHubIssue2DbUpdate
 
 LOG_FOLDER_PATH = "logs"
 LOG_NAME = "gitana"
@@ -67,12 +68,15 @@ class Gitana:
             os.makedirs(name)
 
     def delete_previous_logs(self):
-        files = glob.glob(self.log_folder_path + "/*")
-        for f in files:
-            try:
-                os.remove(f)
-            except:
-                continue
+        try:
+            files = glob.glob(self.log_folder_path + "/*")
+            for f in files:
+                try:
+                    os.remove(f)
+                except:
+                    continue
+        except AttributeError:
+            pass
 
     def init_db(self, db_name):
         self.logger.info("initializing db")
@@ -164,18 +168,18 @@ class Gitana:
     def import_github_tracker_data(self, db_name, project_name, repo_name, issue_tracker_name, github_repo_full_name,
                                    access_tokens, processes):
         logging.info("importing github data")
-        github_importer = GithubIssue2DbMain(db_name, project_name, repo_name, issue_tracker_name,
+        github_importer = GitHubIssue2DbMain(db_name, project_name, repo_name, issue_tracker_name,
                                              github_repo_full_name,
                                              access_tokens,
                                              processes, self.config)
-        github_importer.import_issues()
+        github_importer.extract()
 
     def update_github_tracker_data(self, db_name, project_name, repo_name, issue_tracker_name, github_repo_full_name,
                                    access_tokens,
                                    processes):
         logging.info("updating github data")
-        github_updater = GithubIssue2DbUpdate(db_name, project_name, repo_name, issue_tracker_name,
+        github_updater = GitHubIssue2DbUpdate(db_name, project_name, repo_name, issue_tracker_name,
                                               github_repo_full_name,
                                               access_tokens,
                                               processes, self.config)
-        github_updater.update_issues()
+        github_updater.update()

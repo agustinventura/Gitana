@@ -4,11 +4,11 @@ __author__ = 'valerio cosentino'
 
 import pygal
 from pygal.style import LightColorizedStyle
+
 from util.date_util import DateUtil
 
 
 class ChartGenerator():
-
     def __init__(self, cnx, logger):
         self.cnx = cnx
         self.logger = logger
@@ -40,7 +40,7 @@ class ChartGenerator():
         elif "month" in time_dimension:
             span = intervals
         elif "week" in time_dimension:
-            span = [self.date_util.get_weekday_from_int(i-1) for i in intervals if i <= 7]
+            span = [self.date_util.get_weekday_from_int(i - 1) for i in intervals if i <= 7]
 
         if '_' in y_label:
             y_label = y_label.replace('_', ' ')

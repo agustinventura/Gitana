@@ -2,11 +2,13 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import time
 import os
+import time
 
 from selenium import webdriver
+
 import util
+
 WEB_DRIVER_PATH = os.path.dirname(util.__file__) + "\selenium_driver\phantomjs.exe"
 
 
@@ -116,7 +118,10 @@ class EclipseForumQuerier():
 
     def get_message_author_name(self, message):
         try:
-            found = message.find_element_by_class_name("MsgR2").find_element_by_class_name("msgud").find_elements_by_tag_name("a")[0].text
+            found = \
+                message.find_element_by_class_name("MsgR2").find_element_by_class_name(
+                    "msgud").find_elements_by_tag_name(
+                    "a")[0].text
         except:
             found = None
 

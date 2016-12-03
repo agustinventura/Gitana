@@ -5,21 +5,22 @@ __author__ = 'valerio cosentino'
 from gitana import Gitana
 
 CONFIG = {
-            'user': 'root',
-            'password': 'root',
-            'host': 'localhost',
-            'port': '3306',
-            'raise_on_warnings': False,
-            'buffered': True
-        }
+    'user': 'root',
+    'password': 'root',
+    'host': 'localhost',
+    'port': '3306',
+    'raise_on_warnings': False,
+    'buffered': True
+}
 
 REFERENCES = ["0.7.0", "0.7.1", "0.7.2", "0.7.3", "0.7.4", "0.8.0", "0.9.0",
               "0.10.0", "1.0.0", "1.0.1", "1.1.2", "1.1.3", "1.1.4", "2.0.0"]
 
 
 def test_1(g):
-    #test before date
-    g.import_bugzilla_tracker_data("papyrus_db_test", "papyrus", "papyrus_repo", "bugzilla_papyrus", "https://bugs.eclipse.org/bugs/xmlrpc.cgi", "papyrus", "2013-05-05", 1)
+    # test before date
+    g.import_bugzilla_tracker_data("papyrus_db_test", "papyrus", "papyrus_repo", "bugzilla_papyrus",
+                                   "https://bugs.eclipse.org/bugs/xmlrpc.cgi", "papyrus", "2013-05-05", 1)
 
 
 def test_2(g):
@@ -28,7 +29,8 @@ def test_2(g):
 
 
 def test_3(g):
-    g.import_bugzilla_tracker_data("papyrus_db_test", "papyrus", "papyrus_repo", "bugzilla_papyrus", "https://bugs.eclipse.org/bugs/xmlrpc.cgi", "papyrus", None, 10)
+    g.import_bugzilla_tracker_data("papyrus_db_test", "papyrus", "papyrus_repo", "bugzilla_papyrus",
+                                   "https://bugs.eclipse.org/bugs/xmlrpc.cgi", "papyrus", None, 10)
 
 
 def main():
@@ -40,7 +42,7 @@ def main():
 
     #print "starting 1.."
     #test_1(g)
-    #print "starting 2.."
+    # print "starting 2.."
     #test_2(g)
     print "starting 3.."
     test_3(g)

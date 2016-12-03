@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 
 
 class DateUtil():
-
     def get_month_from_int(self, month_int):
         return calendar.month_name[month_int]
 

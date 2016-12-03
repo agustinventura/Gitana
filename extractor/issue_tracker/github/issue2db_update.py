@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from util import multiprocessing_util
 
 __author__ = 'agustin ventura'
 
@@ -15,10 +16,9 @@ from querier_github import IssueReader
 from github_dao import GithubDAO
 from issue2db_extract_issue import GithubIssue2Db
 from issue2db_extract_issue_dependency import GithubIssueDependency2Db
-from extractor.util import multiprocessing_util
 
 
-class GithubIssue2DbUpdate:
+class GitHubIssue2DbUpdate:
     NUM_PROCESSES = 5
 
     def __init__(self, db_name, project_name, repo_name, tracker_name, github_repo_name, access_tokens, processes,
@@ -40,7 +40,7 @@ class GithubIssue2DbUpdate:
             self.processes = processes
         self.access_tokens = access_tokens
 
-    def update_issues(self):
+    def update(self):
         # 1) Init database
         self.repo_id = self.github_dao.get_repo_id(self.project_name, self.repo_name)
         issue_tracker_id = self.github_dao.get_issue_tracker_id(self.repo_id, self.tracker_name, self.type)

@@ -1,15 +1,13 @@
 __author__ = 'valerio cosentino'
 
-import mysql.connector
-from mysql.connector import errorcode
 import sys
+
 from util.db_util import DbUtil
 
 sys.path.insert(0, "..")
 
 
 class DslUtil():
-
     def __init__(self):
         self.db_util = DbUtil()
 

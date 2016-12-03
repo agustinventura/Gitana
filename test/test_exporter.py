@@ -1,7 +1,7 @@
 __author__ = 'valerio cosentino'
 
-from exporter.report.report_exporter import ReportExporter
 from exporter.graph.graph_exporter import GraphExporter
+from exporter.report.report_exporter import ReportExporter
 
 CONFIG = {
             'user': 'root',
@@ -24,7 +24,7 @@ def test_report_exporter():
 
 
 def main():
-    #test_graph_exporter()
+    # test_graph_exporter()
     test_report_exporter()
 
 if __name__ == "__main__":

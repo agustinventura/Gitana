@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-from datetime import datetime
 import time
+from datetime import datetime
 
+from eclipse_forum_dao import EclipseForumDao
 from querier_eclipse_forum import EclipseForumQuerier
 from util.date_util import DateUtil
-from eclipse_forum_dao import EclipseForumDao
 from util.logging_util import LoggingUtil
 
 
@@ -56,7 +56,8 @@ class EclipseTopic2Db(object):
         created_at = self.date_util.get_timestamp(self.querier.get_created_at(message), "%a, %d %B %Y %H:%M")
         body = self.querier.get_message_body(message)
         author_name = self.querier.get_message_author_name(message)
-        message_id = self.dao.insert_message(own_id, pos, self.dao.get_message_type_id("reply"), topic_id, body, None, self.dao.get_user_id(author_name), created_at)
+        message_id = self.dao.insert_message(own_id, pos, self.dao.get_message_type_id("reply"), topic_id, body, None,
+                                             self.dao.get_user_id(author_name), created_at)
 
         if self.querier.message_has_attachments(message):
             self.get_message_attachments_info(message_id, message)
@@ -95,7 +96,7 @@ class EclipseTopic2Db(object):
 
             minutes_and_seconds = divmod((end_time-start_time).total_seconds(), 60)
             self.logger.info("EclipseTopic2Db finished after " + str(minutes_and_seconds[0])
-                           + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
+                             + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
             self.logging_util.remove_file_handler_logger(self.logger, self.fileHandler)
         except Exception, e:
             self.logger.error("EclipseTopic2Db failed", exc_info=True)

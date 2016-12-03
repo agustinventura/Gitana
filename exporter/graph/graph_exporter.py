@@ -2,22 +2,18 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-import networkx as nx
-import mysql.connector
-from mysql.connector import errorcode
+import errno
+import json
 import logging
 import logging.handlers
 import os
-from datetime import datetime
-import json
 import uuid
-import errno
-from util.dsl_util import DslUtil
-from util.db_util import DbUtil
+from datetime import datetime
 
 from exporter import resources
 from exporter.graph.gexf_generator import GexfGenerator
-
+from util.db_util import DbUtil
+from util.dsl_util import DslUtil
 
 LOG_FOLDER_PATH = "logs"
 LOG_NAME = "gitana-graph-exporter"
@@ -60,7 +56,7 @@ class GraphExporter():
         if not os.path.exists(os.path.dirname(filename)):
             try:
                 os.makedirs(os.path.dirname(filename))
-            except OSError as exc: # Guard against race condition
+            except OSError as exc:  # Guard against race condition
                 if exc.errno != errno.EEXIST:
                     raise
 
@@ -83,7 +79,6 @@ class GraphExporter():
             data = json.load(json_data)
 
         return data.get('graph')
-
 
     def get_parameter(self, key, parameters):
         found = None
@@ -112,7 +107,6 @@ class GraphExporter():
 
             for k in found.keys():
                 if k not in ['name', 'edges', 'nodes']:
-
                     k_value = str(self.get_parameter(k, parameters))
 
                     nodes_query = nodes_query.replace(k, k_value)

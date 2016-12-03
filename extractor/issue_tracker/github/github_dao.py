@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from extractor.util.data_source import DataSource
+
+from util.db_util import DbUtil
+
 __author__ = 'agustin ventura'
 
 import logging
-
-from extractor.util.data_source import DataSource
-from extractor.util.db_util import DbUtil
 
 
 class GithubDAO:
@@ -25,7 +26,7 @@ class GithubDAO:
     def get_repo_id(self, project_name, repo_name):
         project_id = self.db_util.select_project_id(self.data_source.open_connection(), project_name,
                                                     logging.getLogger())
-        repo_id = self.db_util.select_repo_id(self.data_source.open_connection(), project_id, repo_name,
+        repo_id = self.db_util.select_repo_id(self.data_source.open_connection(), repo_name,
                                               logging.getLogger())
         return repo_id
 
@@ -209,7 +210,7 @@ class GithubDAO:
         return label_id
 
     def __insert_issue_tracker(self, repo_id, type, url):
-        query = "INSERT IGNORE INTO issue_tracker(id, repo_id, url, type) " \
+        query = "INSERT IGNORE INTO issue_tracker(id, repo_id, name, type) " \
                 "VALUES (%s, %s, %s, %s)"
         arguments = [None, repo_id, url, type]
         self.data_source.execute_and_commit(query, arguments)
@@ -218,7 +219,7 @@ class GithubDAO:
         issue_tracker_id = None
         query = "SELECT id " \
                 "FROM issue_tracker " \
-                "WHERE url = %s"
+                "WHERE name = %s"
         arguments = [url]
         row = self.data_source.get_row(query, arguments)
         if row:

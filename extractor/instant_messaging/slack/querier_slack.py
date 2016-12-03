@@ -3,10 +3,11 @@
 __author__ = 'valerio cosentino'
 
 import re
+
 from slacker import Slacker
 
-from util.token_util import TokenUtil
 from util.date_util import DateUtil
+from util.token_util import TokenUtil
 
 
 class SlackQuerier():
@@ -28,7 +29,9 @@ class SlackQuerier():
                 selected.append(channel)
 
         if before_date:
-            selected = [c for c in selected if self.date_util.get_timestamp(self.get_channel_created_at(c), "%Y-%m-%d %H:%M:%S") <= self.date_util.get_timestamp(before_date, "%Y-%m-%d")]
+            selected = [c for c in selected if self.date_util.get_timestamp(self.get_channel_created_at(c),
+                                                                            "%Y-%m-%d %H:%M:%S") <= self.date_util.get_timestamp(
+                before_date, "%Y-%m-%d")]
 
         return [self.get_channel_id(c) for c in selected]
 
@@ -236,5 +239,3 @@ class SlackQuerier():
 
     def get_message_content(self, message):
         return message.get('text')
-
-

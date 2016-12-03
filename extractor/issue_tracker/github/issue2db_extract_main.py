@@ -4,6 +4,8 @@ import time
 
 from github import GithubException
 
+from util import multiprocessing_util
+
 __author__ = 'agustin ventura'
 
 import logging
@@ -15,11 +17,10 @@ from querier_github import GithubQuerier
 from github_dao import GithubDAO
 from issue2db_extract_issue import GithubIssue2Db
 from issue2db_extract_issue_dependency import GithubIssueDependency2Db
-from extractor.util import multiprocessing_util
 from querier_github import IssuePageReader
 
 
-class GithubIssue2DbMain:
+class GitHubIssue2DbMain:
     NUM_PROCESSES = 5
 
     def __init__(self, db_name, project_name, repo_name, tracker_name, github_repo_name, access_tokens, processes,
@@ -36,12 +37,12 @@ class GithubIssue2DbMain:
         self.github_reader = GithubQuerier(self.github_repo_name, access_tokens[0])
         self.github_dao = None
         if processes is None:
-            self.processes = GithubIssue2DbMain.NUM_PROCESSES
+            self.processes = GitHubIssue2DbMain.NUM_PROCESSES
         else:
             self.processes = processes
         self.access_tokens = access_tokens
 
-    def import_issues(self):
+    def extract(self):
         # 1) Init database
         self.github_dao = GithubDAO(self.config)
         logging.info("Initializing issues database")

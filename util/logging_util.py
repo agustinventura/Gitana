@@ -4,7 +4,6 @@ import logging
 
 
 class LoggingUtil():
-
     def get_logger(self, log_filename):
         return logging.getLogger(log_filename)
 

@@ -6,7 +6,6 @@ import time
 
 
 class TokenUtil():
-
     def get_requests_left(self, token):
         try:
             left = token.requests_left

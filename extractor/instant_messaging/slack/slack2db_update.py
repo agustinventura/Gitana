@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-from datetime import datetime
 import multiprocessing
+from datetime import datetime
 
-from util import multiprocessing_util
 from querier_slack import SlackQuerier
 from slack2db_extract_channel import SlackChannel2Db
 from slack_dao import SlackDao
+from util import multiprocessing_util
 
 
 class Slack2DbUpdate():
@@ -35,7 +35,8 @@ class Slack2DbUpdate():
         channel_ids = self.dao.get_channel_ids(instant_messaging_id)
 
         if channel_ids:
-            intervals = [i for i in multiprocessing_util.get_tasks_intervals(channel_ids, len(self.tokens)) if len(i) > 0]
+            intervals = [i for i in multiprocessing_util.get_tasks_intervals(channel_ids, len(self.tokens)) if
+                         len(i) > 0]
 
             queue_extractors = multiprocessing.JoinableQueue()
             results = multiprocessing.Queue()
@@ -44,7 +45,8 @@ class Slack2DbUpdate():
             multiprocessing_util.start_consumers(len(self.tokens), queue_extractors, results)
 
             for i in range(len(intervals)):
-                channel_extractor = SlackChannel2Db(self.db_name, instant_messaging_id, intervals[i], self.tokens[i], self.config, self.log_path)
+                channel_extractor = SlackChannel2Db(self.db_name, instant_messaging_id, intervals[i], self.tokens[i],
+                                                    self.config, self.log_path)
                 queue_extractors.put(channel_extractor)
 
             # Add end-of-queue markers
@@ -62,8 +64,8 @@ class Slack2DbUpdate():
             self.dao.close_connection()
             end_time = datetime.now()
 
-            minutes_and_seconds = divmod((end_time-start_time).total_seconds(), 60)
+            minutes_and_seconds = divmod((end_time - start_time).total_seconds(), 60)
             self.logger.info("Slack2DbUpdate extract finished after " + str(minutes_and_seconds[0])
-                         + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
+                             + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
         except:
             self.logger.error("Slack2DbUpdate extract failed", exc_info=True)

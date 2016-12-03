@@ -2,14 +2,13 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-
-from datetime import datetime
 import multiprocessing
+from datetime import datetime
 
+from bugzilla_dao import BugzillaDao
 from issue2db_extract_issue import BugzillaIssue2Db
 from issue2db_extract_issue_dependency import BugzillaIssueDependency2Db
 from util import multiprocessing_util
-from bugzilla_dao import BugzillaDao
 
 
 class BugzillaIssue2DbUpdate():
@@ -53,7 +52,7 @@ class BugzillaIssue2DbUpdate():
 
         for interval in intervals:
             issue_extractor = BugzillaIssue2Db(self.db_name, repo_id, issue_tracker_id, url, self.product, interval,
-                                       self.config, self.log_path)
+                                               self.config, self.log_path)
             queue_intervals.put(issue_extractor)
 
         # Add end-of-queue markers
@@ -70,8 +69,9 @@ class BugzillaIssue2DbUpdate():
         multiprocessing_util.start_consumers(self.num_processes, queue_intervals, results)
 
         for interval in intervals:
-            issue_dependency_extractor = BugzillaIssueDependency2Db(self.db_name, repo_id, issue_tracker_id, url, self.product, interval,
-                                                 self.config, self.log_path)
+            issue_dependency_extractor = BugzillaIssueDependency2Db(self.db_name, repo_id, issue_tracker_id, url,
+                                                                    self.product, interval,
+                                                                    self.config, self.log_path)
             queue_intervals.put(issue_dependency_extractor)
 
         # Add end-of-queue markers
@@ -117,6 +117,6 @@ class BugzillaIssue2DbUpdate():
 
             minutes_and_seconds = divmod((end_time-start_time).total_seconds(), 60)
             self.logger.info("BugzillaIssue2DbUpdate finished after " + str(minutes_and_seconds[0])
-                         + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
+                             + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
         except:
             self.logger.error("BugzillaIssue2DbUpdate failed", exc_info=True)

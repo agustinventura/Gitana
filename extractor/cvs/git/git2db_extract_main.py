@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-from datetime import datetime
 import multiprocessing
+from datetime import datetime
 
-from querier_git import GitQuerier
 from git2db_extract_reference import Git2DbReference
-from util import multiprocessing_util
 from git_dao import GitDao
+from querier_git import GitQuerier
+from util import multiprocessing_util
 
 #do not import patches
 LIGHT_IMPORT_TYPE = 1
@@ -87,7 +87,7 @@ class Git2DbMain():
             repo_id = self.dao.select_repo_id(self.repo_name)
             self.dao.close_connection()
 
-            #info contribution does not need a connection to the db
+            # info contribution does not need a connection to the db
             self.get_info_contribution(repo_id)
 
             self.dao.restart_connection()

@@ -1,32 +1,32 @@
 __author__ = 'valerio cosentino'
 
-import networkx as nx
-from random import randint
 import errno
 import os
+from random import randint
+
+import networkx as nx
 
 DEFAULT_GRAPH_MODE = "dynamic"
 EXT = ".gexf"
 
 COLORS = {
-        "white": (255, 255, 255),
-        "gray": (190, 190, 190),
-        "black": (0, 0, 0),
-        "blue": (0, 0, 255),
-        "cyan": (0, 255, 255),
-        "green": (34, 139, 34),
-        "yellow": (255, 255, 0),
-        "red": (255, 0, 0),
-        "brown": (165, 42, 42),
-        "orange": (255, 69, 0),
-        "pink": (255, 192, 203),
-        "purple": (160, 32, 240),
-        "violet": (148, 0, 211)
-        }
+    "white": (255, 255, 255),
+    "gray": (190, 190, 190),
+    "black": (0, 0, 0),
+    "blue": (0, 0, 255),
+    "cyan": (0, 255, 255),
+    "green": (34, 139, 34),
+    "yellow": (255, 255, 0),
+    "red": (255, 0, 0),
+    "brown": (165, 42, 42),
+    "orange": (255, 69, 0),
+    "pink": (255, 192, 203),
+    "purple": (160, 32, 240),
+    "violet": (148, 0, 211)
+}
 
 
 class GexfGenerator():
-
     def __init__(self, cnx, logger):
         self.cnx = cnx
         self.logger = logger
@@ -35,7 +35,7 @@ class GexfGenerator():
         if not os.path.exists(os.path.dirname(filename)):
             try:
                 os.makedirs(os.path.dirname(filename))
-            except OSError as exc: # Guard against race condition
+            except OSError as exc:  # Guard against race condition
                 if exc.errno != errno.EEXIST:
                     raise
 
@@ -64,10 +64,12 @@ class GexfGenerator():
                 graph.node[node_id]['label'] = node_label
                 graph.node[node_id]['viz'] = {'color': {'r': r, 'g': g, 'b': b, 'a': 0},
                                               'size': node_size,
-                                              'position': {'x': randint(0, 255), 'y': randint(0, 255), 'z': randint(0, 255)}}
+                                              'position': {'x': randint(0, 255), 'y': randint(0, 255),
+                                                           'z': randint(0, 255)}}
             except:
                 self.logger.warning(
-                    "GexfExporter: problem when inserting node(id, label, size): (" + str(node_id) + "," + str(node_label) + ")")
+                    "GexfExporter: problem when inserting node(id, label, size): (" + str(node_id) + "," + str(
+                        node_label) + ")")
 
             row = cursor.fetchone()
 
@@ -90,7 +92,8 @@ class GexfGenerator():
                 graph.add_edge(source_id, target_id, weight=weight)
                 graph[source_id][target_id]['viz'] = {'color': {'r': r, 'g': g, 'b': b, 'a': 0}}
             except:
-                self.logger.warning("GexfExporter: problem when inserting edge(source_id, target_id, weight): (" + str(source_id) + "," + str(target_id) + "," + str(weight) + ")")
+                self.logger.warning("GexfExporter: problem when inserting edge(source_id, target_id, weight): (" + str(
+                    source_id) + "," + str(target_id) + "," + str(weight) + ")")
 
             row = cursor.fetchone()
             counter += 1
@@ -111,4 +114,3 @@ class GexfGenerator():
 
         self.create_output_file(file_path)
         nx.write_gexf(graph, file_path)
-

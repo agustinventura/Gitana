@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-from datetime import datetime
 import multiprocessing
+from datetime import datetime
 
-from util import multiprocessing_util
 from querier_slack import SlackQuerier
 from slack2db_extract_channel import SlackChannel2Db
 from slack_dao import SlackDao
+from util import multiprocessing_util
 
 
 class Slack2DbMain():
@@ -44,7 +44,8 @@ class Slack2DbMain():
                 description = self.querier.get_channel_description(channel)
                 created_at = self.querier.get_channel_created_at(channel)
 
-                channel_id = self.dao.insert_channel(own_id, instant_messaging_id, name, description, created_at, last_change_at)
+                channel_id = self.dao.insert_channel(own_id, instant_messaging_id, name, description, created_at,
+                                                     last_change_at)
                 channel_ids.append(channel_id)
 
         return channel_ids
@@ -62,7 +63,8 @@ class Slack2DbMain():
 
         pos = 0
         for interval in intervals:
-            topic_extractor = SlackChannel2Db(self.db_name, instant_messaging_id, interval, self.tokens[pos], self.config, self.log_path)
+            topic_extractor = SlackChannel2Db(self.db_name, instant_messaging_id, interval, self.tokens[pos],
+                                              self.config, self.log_path)
             queue_extractors.put(topic_extractor)
             pos += 1
 
@@ -82,8 +84,8 @@ class Slack2DbMain():
 
             end_time = datetime.now()
 
-            minutes_and_seconds = divmod((end_time-start_time).total_seconds(), 60)
+            minutes_and_seconds = divmod((end_time - start_time).total_seconds(), 60)
             self.logger.info("Slack2DbMain extract finished after " + str(minutes_and_seconds[0])
-                         + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
+                             + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
         except:
             self.logger.error("Slack2Db extract failed", exc_info=True)

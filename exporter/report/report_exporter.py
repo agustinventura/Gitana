@@ -3,20 +3,20 @@
 __author__ = 'valerio cosentino'
 
 import codecs
+import errno
+import json
 import logging
 import logging.handlers
 import os
-from datetime import datetime
-import json
 import uuid
-import errno
-from util.dsl_util import DslUtil
-from util.date_util import DateUtil
-from util.db_util import DbUtil
-from exporter.report.chart_generator import ChartGenerator
-from exporter.report.html_generator import HtmlGenerator
+from datetime import datetime
 
 from exporter import resources
+from exporter.report.chart_generator import ChartGenerator
+from exporter.report.html_generator import HtmlGenerator
+from util.date_util import DateUtil
+from util.db_util import DbUtil
+from util.dsl_util import DslUtil
 
 LOG_FOLDER_PATH = "logs"
 LOG_NAME = "gitana-report-exporter"
@@ -64,10 +64,9 @@ class ReportExporter():
         if not os.path.exists(os.path.dirname(filename)):
             try:
                 os.makedirs(os.path.dirname(filename))
-            except OSError as exc: # Guard against race condition
+            except OSError as exc:  # Guard against race condition
                 if exc.errno != errno.EEXIST:
                     raise
-
 
     def set_database(self):
         cursor = self.cnx.cursor()
@@ -132,7 +131,6 @@ class ReportExporter():
 
             for k in found.keys():
                 if k not in ['name', 'query']:
-
                     k_value = str(self.get_parameter(k, parameters))
 
                     query = query.replace(k, k_value)
@@ -158,7 +156,9 @@ class ReportExporter():
             entity_id = self.dsl_util.find_entity_id(self.cnx, activity_type, entity_name, self.logger)
             charts = []
             for measure in measures:
-                query = self.load_query_json(measure, {activity_type: entity_id, 'project': project_id, 'afterdate': after_date, 'interval': interval})
+                query = self.load_query_json(measure,
+                                             {activity_type: entity_id, 'project': project_id, 'afterdate': after_date,
+                                              'interval': interval})
                 charts.append(self.chart_generator.create(query, interval.lower(), measure, time_span))
 
             entity2charts.update({entity_name: charts})
@@ -168,7 +168,7 @@ class ReportExporter():
     def calculate_time_information(self, time_span):
         start = None
         interval = None
-        current_time = datetime.now() #test datetime.strptime("2015-10-10", "%Y-%m-%d")
+        current_time = datetime.now()  # test datetime.strptime("2015-10-10", "%Y-%m-%d")
         if time_span == "this_week":
             start = self.date_util.get_start_time_span(current_time, "week", "%Y-%m-%d")
             interval = "DAY"
@@ -179,7 +179,8 @@ class ReportExporter():
             start = self.date_util.get_start_time_span(current_time, "year", "%Y-%m-%d")
             interval = "MONTH"
         else:
-            self.logger.error("ReportExporter: time span " + str(time_span) + " not recognized! Options are: this_week, this_month, this_year")
+            self.logger.error("ReportExporter: time span " + str(
+                time_span) + " not recognized! Options are: this_week, this_month, this_year")
 
         return start, interval
 
@@ -201,7 +202,7 @@ class ReportExporter():
 
         html_page = self.html_generator.create(project_name, activity2charts)
 
-        with codecs.open(file_path,'w',encoding='utf8') as f:
+        with codecs.open(file_path, 'w', encoding='utf8') as f:
             f.write(html_page)
 
         self.db_util.close_connection(self.cnx)

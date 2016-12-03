@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 __author__ = 'valerio cosentino'
 
-from datetime import datetime
 import multiprocessing
+from datetime import datetime
 
-from querier_git import GitQuerier
 from extractor.cvs.git.git2db_extract_reference import Git2DbReference
-from util import multiprocessing_util
 from git_dao import GitDao
+from querier_git import GitQuerier
+from util import multiprocessing_util
 
 
 class Git2DbUpdate():
@@ -105,6 +105,6 @@ class Git2DbUpdate():
             end_time = datetime.now()
             minutes_and_seconds = divmod((end_time-start_time).total_seconds(), 60)
             self.logger.info("Git2DbUpdate finished after " + str(minutes_and_seconds[0])
-                         + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
+                             + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
         except:
             self.logger.error("Git2DbUpdate failed", exc_info=True)

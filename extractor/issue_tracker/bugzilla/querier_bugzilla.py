@@ -3,6 +3,7 @@
 __author__ = 'valerio cosentino'
 
 import bugzilla
+
 from util.date_util import DateUtil
 
 
@@ -16,7 +17,7 @@ class BugzillaQuerier():
         self.date_util = DateUtil()
 
     def get_issue_ids(self, before_date):
-        #TODO - include_fields seems not to work properly, http://bugzilla.readthedocs.io/en/latest/api/core/v1/bug.html
+        # TODO - include_fields seems not to work properly, http://bugzilla.readthedocs.io/en/latest/api/core/v1/bug.html
         query = self.bzapi.build_query(product=self.product, include_fields=["id", "creation_time"])
         result = self.bzapi.query(query)
 

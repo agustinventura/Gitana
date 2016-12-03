@@ -4,8 +4,8 @@ __author__ = 'valerio cosentino'
 
 from datetime import datetime
 
-from querier_bugzilla import BugzillaQuerier
 from bugzilla_dao import BugzillaDao
+from querier_bugzilla import BugzillaQuerier
 from util.logging_util import LoggingUtil
 
 
@@ -84,17 +84,21 @@ class BugzillaIssueDependency2Db(object):
                 issue = self.querier.get_issue(issue_own_id)
 
                 if issue.blocks:
-                    self.extract_issue_dependency(issue_id, self.querier.get_issue_blocks(issue), self.dao.get_issue_dependency_type_id("block"))
+                    self.extract_issue_dependency(issue_id, self.querier.get_issue_blocks(issue),
+                                                  self.dao.get_issue_dependency_type_id("block"))
 
                 if issue.depends_on:
-                    self.extract_issue_dependency(issue_id, self.querier.get_issue_depends_on(issue), self.dao.get_issue_dependency_type_id("depends"))
+                    self.extract_issue_dependency(issue_id, self.querier.get_issue_depends_on(issue),
+                                                  self.dao.get_issue_dependency_type_id("depends"))
 
                 if issue.see_also:
-                    self.extract_issue_dependency(issue_id, self.querier.get_issue_see_also(issue), self.dao.get_issue_dependency_type_id("related"))
+                    self.extract_issue_dependency(issue_id, self.querier.get_issue_see_also(issue),
+                                                  self.dao.get_issue_dependency_type_id("related"))
 
                 if self.is_duplicated(issue):
                     if issue.dupe_of:
-                        self.extract_issue_dependency(issue_id, self.querier.get_issue_dupe_of(issue), self.dao.get_issue_dependency_type_id("duplicated"))
+                        self.extract_issue_dependency(issue_id, self.querier.get_issue_dupe_of(issue),
+                                                      self.dao.get_issue_dependency_type_id("duplicated"))
 
             except Exception, e:
                 self.logger.error("something went wrong with the following issue id: " + str(issue_id) + " - tracker id " + str(self.issue_tracker_id), exc_info=True)
@@ -112,7 +116,7 @@ class BugzillaIssueDependency2Db(object):
 
             minutes_and_seconds = divmod((end_time-start_time).total_seconds(), 60)
             self.logger.info("BugzillaIssueDependency2Db finished after " + str(minutes_and_seconds[0])
-                           + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
+                             + " minutes and " + str(round(minutes_and_seconds[1], 1)) + " secs")
             self.logging_util.remove_file_handler_logger(self.logger, self.fileHandler)
         except Exception, e:
             self.logger.error("BugzillaIssueDependency2Db failed", exc_info=True)
