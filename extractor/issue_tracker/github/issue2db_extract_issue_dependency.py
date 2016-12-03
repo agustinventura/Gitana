@@ -26,7 +26,7 @@ class GithubIssueDependency2Db:
     def write_issue_reference(self, body, issue_id):
         referenced_issues_own_id = self.github_querier.read_issue_references(body)
         for referenced_issue_own_id in referenced_issues_own_id:
-            referenced_issue_id = self.github_dao.get_issue_id_by_own_id(referenced_issue_own_id[2:],
+            referenced_issue_id = self.github_dao.get_issue_id_by_own_id(referenced_issue_own_id[1:],
                                                                          self.issue_tracker_id)
             if referenced_issue_id is not None:
                 self.github_dao.insert_issue_reference(issue_id, referenced_issue_id)

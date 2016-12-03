@@ -143,6 +143,14 @@ class GithubDAO:
                 "VALUES (%s, %s, %s, %s, %s, %s, %s)"
         arguments = [None, comment_id, comment_pos, comment_body, comment_created_at, user_id, issue_id]
         self.data_source.execute_and_commit(query, arguments)
+        query = "SELECT id FROM message WHERE own_id = %s AND issue_id = %s"
+        arguments = [comment_id, issue_id]
+        row = self.data_source.get_row(query, arguments)
+        if row:
+            comment_id = row[0]
+        else:
+            logging.warning("No comment with own_id " + str(comment_id) + " and issue_id " + str(issue_id))
+        return comment_id
 
     def delete_issue_comments(self, issue_id):
         query = "DELETE FROM message WHERE issue_id = %s"
@@ -185,9 +193,9 @@ class GithubDAO:
         arguments = [issue_id]
         self.data_source.execute_and_commit(query, arguments)
 
-    def insert_issue_attachment(self, issue_id, attachment_url):
+    def insert_issue_attachment(self, comment_id, attachment_url):
         query = "INSERT IGNORE INTO attachment(id, message_id, url) values (%s, %s, %s)"
-        arguments = [None, issue_id, attachment_url]
+        arguments = [None, comment_id, attachment_url]
         self.data_source.execute_and_commit(query, arguments)
 
     def delete_issue_attachment(self, issue_id):
@@ -260,9 +268,9 @@ class GithubDAO:
         messages = []
         for row in rows:
             message = {
-                "id": row[0],
-                "issue_id": row[1],
-                "body": row[2]
+                "id": int(row[0]),
+                "issue_id": int(row[1]),
+                "body": str(row[2])
             }
             messages.append(message)
         return messages

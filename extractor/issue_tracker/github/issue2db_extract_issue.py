@@ -115,9 +115,10 @@ class GithubIssue2Db:
             comment_data = self.github_querier.read_comment(comment)
             user_data = self.github_querier.read_user_data(comment_data["user"])
             comment_data["user"] = self.__write_user(user_data)
-            self.github_dao.insert_issue_comment(issue_id, comment_data["user"], comment_data["id"], comment_pos + 1,
-                                                 comment_data["body"], comment_data["created_at"])
-            self.__write_issue_attachment(comment_data["body"], issue_id)
+            comment_id = self.github_dao.insert_issue_comment(issue_id, comment_data["user"], comment_data["id"],
+                                                              comment_pos + 1,
+                                                              comment_data["body"], comment_data["created_at"])
+            self.__write_issue_attachment(comment_data["body"], comment_id)
 
     def __update_comments(self, issue, issue_id):
         self.github_dao.delete_issue_comments(issue_id)
@@ -220,21 +221,21 @@ class GithubIssue2Db:
         self.__write_assignees(issue, issue_id)
 
     def __write_issue_body(self, issue_id, user_id, issue_data):
-        self.github_dao.insert_issue_comment(issue_id, user_id, 0, 0, issue_data["body"],
-                                             issue_data["created_at"])
+        comment_id = self.github_dao.insert_issue_comment(issue_id, user_id, 0, 0, issue_data["body"],
+                                                          issue_data["created_at"])
         if issue_data["body"] is not None:
-            self.__write_issue_attachment(issue_data["body"], issue_id)
+            self.__write_issue_attachment(issue_data["body"], comment_id)
 
     def __update_issue_body(self, issue_id, user_id, issue_data):
         self.github_dao.delete_issue_comments(issue_id)
-        self.github_dao.insert_issue_comment(issue_id, user_id, 0, 0, issue_data["body"],
-                                             issue_data["created_at"])
+        comment_id = self.github_dao.insert_issue_comment(issue_id, user_id, 0, 0, issue_data["body"],
+                                                          issue_data["created_at"])
         if issue_data["body"] is not None:
             self.github_dao.delete_issue_reference(issue_id)
             self.github_dao.delete_issue_attachment(issue_id)
-            self.__write_issue_attachment(issue_data["body"], issue_id)
+            self.__write_issue_attachment(issue_data["body"], comment_id)
 
-    def __write_issue_attachment(self, body, issue_id):
+    def __write_issue_attachment(self, body, comment_id):
         attachment_urls = self.github_querier.read_issue_attachments(body)
         for attachment_url in attachment_urls:
-            self.github_dao.insert_issue_attachment(issue_id, attachment_url)
+            self.github_dao.insert_issue_attachment(comment_id, attachment_url)
