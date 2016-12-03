@@ -117,6 +117,7 @@ class GithubIssue2Db:
             comment_data["user"] = self.__write_user(user_data)
             self.github_dao.insert_issue_comment(issue_id, comment_data["user"], comment_data["id"], comment_pos + 1,
                                                  comment_data["body"], comment_data["created_at"])
+            self.__write_issue_attachment(comment_data["body"], issue_id)
 
     def __update_comments(self, issue, issue_id):
         self.github_dao.delete_issue_comments(issue_id)

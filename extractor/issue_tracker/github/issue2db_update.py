@@ -35,7 +35,7 @@ class GitHubIssue2DbUpdate:
         self.github_reader = GithubQuerier(self.github_repo_name, access_tokens[0])
         self.github_dao = GithubDAO(config)
         if processes is None:
-            self.processes = GithubIssue2DbUpdate.NUM_PROCESSES
+            self.processes = GitHubIssue2DbUpdate.NUM_PROCESSES
         else:
             self.processes = processes
         self.access_tokens = access_tokens
