@@ -37,13 +37,26 @@ class GithubDAO:
             issue_tracker_id = self.__select_issue_tracker_id(url)
         return issue_tracker_id
 
-    def get_user_id(self, user_name, user_email):
-        user_id = self.db_util.select_user_id_by_name(self.data_source.open_connection(), user_name,
-                                                      logging.getLogger())
-        if user_id is None:
-            self.db_util.insert_user(self.data_source.open_connection(), user_name, user_email, logging.getLogger())
-            user_id = self.db_util.select_user_id_by_name(self.data_source.open_connection(), user_name,
-                                                          logging.getLogger())
+    def get_user_id_by_email(self, email):
+        query = "SELECT id FROM user WHERE email = %s"
+        arguments = [email]
+        row = self.data_source.get_row(query, arguments)
+        user_id = None
+        if row:
+            user_id = row[0]
+        else:
+            logging.warning("No user with email " + email)
+        return user_id
+
+    def get_user_id_by_login(self, login):
+        query = "SELECT id FROM user WHERE name = %s"
+        arguments = [login]
+        row = self.data_source.get_row(query, arguments)
+        user_id = None
+        if row:
+            user_id = row[0]
+        else:
+            logging.warning("No user with login " + login)
         return user_id
 
     def get_user_name(self, user_id):
@@ -56,6 +69,12 @@ class GithubDAO:
         else:
             logging.warning("No user with id " + user_id)
         return user_name
+
+    def insert_user(self, login, email):
+        self.db_util.insert_user(self.data_source.open_connection(), login, email, logging.getLogger())
+        user_id = self.db_util.select_user_id_by_name(self.data_source.open_connection(), login,
+                                                      logging.getLogger())
+        return user_id
 
     def get_event_type_id(self, event_type):
         event_type_id = self.__select_event_type(event_type)
@@ -74,6 +93,17 @@ class GithubDAO:
         else:
             logging.warning("No commit with sha " + str(sha))
         return commit_id
+
+    def get_commit_user_id(self, sha):
+        query = "SELECT author_id FROM commit WHERE sha = %s"
+        arguments = [sha]
+        row = self.data_source.get_row(query, arguments)
+        author_id = None
+        if row:
+            author_id = row[0]
+        else:
+            logging.warning("No commit with sha " + str(sha))
+        return author_id
 
     def get_comment_user_id(self, comment_created_at):
         query = "SELECT author_id FROM message WHERE created_at = %s"

@@ -67,6 +67,10 @@ class GithubQuerier:
         issue_data["updated_at"] = self.date_util.get_timestamp(issue.updated_at, "%Y-%m-%d %H:%M:%S")
         return issue_data
 
+    def read_commits(self, login):
+        commits = self.repository.get_commits(author=login)
+        return commits
+
     def read_comments(self, issue):
         return issue.get_comments()
 

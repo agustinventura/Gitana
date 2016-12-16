@@ -82,7 +82,24 @@ class GithubIssue2Db:
         self.__update_assignees(issue, issue_id)
 
     def __write_user(self, user_data):
-        user_id = self.github_dao.get_user_id(user_data["login"], user_data["email"])
+        user_id = None
+        if user_data["email"] is not None:
+            user_id = self.github_dao.get_user_id_by_email(user_data["email"])
+        if user_id is None:
+            user_id = self.github_dao.get_user_id_by_login(user_data["login"])
+        if user_id is None:
+            user_id = self.__load_user_by_commit(user_data["login"])
+        if user_id is None:
+            user_id = self.github_dao.insert_user(user_data["login"], user_data["email"])
+        return user_id
+
+    def __load_user_by_commit(self, login):
+        commits = self.github_querier.read_commits(login)
+        user_id = None
+        for commit in commits:
+            user_id = self.github_dao.get_commit_user_id(commit.sha)
+            if user_id is not None:
+                break
         return user_id
 
     def __write_issue(self, issue, user_id):
