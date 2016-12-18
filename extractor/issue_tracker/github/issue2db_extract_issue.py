@@ -224,13 +224,17 @@ class GithubIssue2Db:
 
     def __process_assigned_event(self, event_data, event_type, issue_event):
         assignee = event_data["assignee"]
-        issue_event["target_user_id"] = self.github_dao.get_user_id(assignee, None)
+        user_data = {"login": assignee,
+                     "email": None}
+        issue_event["target_user_id"] = self.__write_user(user_data)
         issue_event["detail"] = event_data["actor"].login + " " + event_type + " issue " + str(
             issue_event["issue_own_id"]) + " to " + str(event_data["assignee"])
 
     def __write_assignees(self, issue, issue_id):
         if issue.assignee is not None:
-            assignee_id = self.github_dao.get_user_id(issue.assignee.login, issue.assignee.email)
+            user_data = {"login": issue.assignee.login,
+                         "email": issue.assignee.email}
+            assignee_id = self.__write_user(user_data)
             self.github_dao.insert_issue_assignee(issue_id, assignee_id)
 
     def __update_assignees(self, issue, issue_id):
